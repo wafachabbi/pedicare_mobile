@@ -1,0 +1,933 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{lastpage}
+
+% ---------- Couleurs ----------
+\definecolor{navy}{HTML}{1F3864}
+\definecolor{blueaccent}{HTML}{1E6FDB}
+\definecolor{lightblue}{HTML}{DCE6F1}
+\definecolor{greytext}{HTML}{595959}
+\definecolor{rowgrey}{HTML}{F2F2F2}
+\definecolor{headgrey}{HTML}{D9D9D9}
+\definecolor{phasebg}{HTML}{1F3864}
+\definecolor{linkblue}{HTML}{1E6FDB}
+\definecolor{tealaccent}{HTML}{00855A}
+
+% ---------- Titres ----------
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{1em}{}[{\color{blueaccent}\titlerule[1.2pt]}]
+\titleformat{\subsection}{\large\bfseries\color{blueaccent}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{greytext}}{\thesubsubsection}{1em}{}
+\titlespacing*{\section}{0pt}{18pt}{10pt}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+\titlespacing*{\subsubsection}{0pt}{10pt}{4pt}
+
+% ---------- En-tête / pied de page ----------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[R]{\small\color{greytext}Cahier des charges -- PediCare AI}
+\fancyfoot[C]{\small\color{greytext}Page \thepage\ / \pageref{LastPage}}
+
+% ---------- Listes ----------
+\setlist[itemize]{leftmargin=1.2em, itemsep=4pt, topsep=4pt}
+
+% ---------- Hyperliens ----------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blueaccent,
+  urlcolor=blueaccent,
+  pdftitle={Cahier des charges - PediCare AI},
+  pdfauthor={Équipe PediCare AI}
+}
+
+% ---------- Commandes tableaux ----------
+\newcommand{\headrow}{\rowcolor{navy}}
+\newcommand{\tblhead}[1]{\color{white}\textbf{#1}}
+
+% =========================================================
+\begin{document}
+
+% =========================================================
+% PAGE DE GARDE
+% =========================================================
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\Huge\bfseries\color{navy} CAHIER DES CHARGES}\\[0.6cm]
+{\LARGE\bfseries\color{blueaccent} Application Mobile PediCare AI}\\[0.4cm]
+{\large\color{greytext} Suivi pédiatrique intelligent}\\[1.5cm]
+
+\vspace{1cm}
+\noindent\rule{12cm}{1.2pt}\\[1cm]
+
+\begin{tabular}{ll}
+\textbf{\color{navy}Réalisé par :} & Mohammed Montassar Chihani \\
+                                    & Wafe Chabbi \\
+                                    & Rahma Balloumi \\
+                                    & Arij Juili \\
+                                    & Molka Ghazouani \\[0.5cm]
+\textbf{\color{navy}Encadré par :} & Hichri Chaima \\[0.5cm]
+\textbf{\color{navy}Établissement :} & ESPRIT -- Honoris United Universities \\
+\end{tabular}
+
+\vspace{1.5cm}
+\noindent\rule{12cm}{1.2pt}
+
+\vfill
+{\color{greytext}\today}
+\end{titlepage}
+
+% =========================================================
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------
+\section{Introduction}
+
+La santé de l'enfant nécessite un suivi régulier et une bonne organisation des informations médicales. Les parents doivent gérer plusieurs éléments au quotidien, tels que les vaccinations, les rendez-vous médicaux, les consultations, les traitements prescrits et les échanges avec le pédiatre. Cependant, ces informations peuvent être dispersées entre différents supports, ce qui rend leur gestion et leur consultation moins simples.
+
+Dans ce contexte, \textbf{PediCare AI} propose une solution mobile moderne qui centralise le suivi pédiatrique dans une seule application. L'objectif est de faciliter la vie des parents tout en améliorant la communication avec les professionnels de santé. L'application intègre également des fonctionnalités basées sur l'intelligence artificielle afin d'assister l'utilisateur dans l'organisation et la compréhension de certaines informations, tout en conservant le professionnel de santé au centre de la prise de décision médicale.
+
+Le projet sera développé avec \textbf{Flutter} afin de proposer une application mobile multiplateforme, avec une architecture permettant d'intégrer progressivement les différents services nécessaires au suivi de l'enfant.
+
+% ---------------------------------------------------------
+\section{Contexte et problématique}
+
+\subsection{Contexte}
+
+Le suivi médical d'un enfant nécessite la gestion de nombreuses informations : profil de l'enfant, vaccinations, rendez-vous, consultations, traitements et échanges avec le pédiatre. Ces informations peuvent être dispersées entre différents supports et applications. PediCare AI vise à réunir ces différentes fonctionnalités dans une seule application mobile afin de simplifier le suivi pédiatrique et d'améliorer la communication entre les parents et les professionnels de santé.
+
+\subsection{Problématique}
+
+Les parents peuvent rencontrer plusieurs difficultés :
+
+\begin{itemize}
+  \item Difficulté à centraliser les informations médicales de leur enfant ;
+  \item Oubli de certains rendez-vous ou vaccinations ;
+  \item Difficulté à suivre correctement les traitements prescrits ;
+  \item Manque de visibilité sur l'historique des consultations ;
+  \item Difficulté à communiquer rapidement avec le pédiatre ;
+  \item Déplacement parfois nécessaire pour une consultation qui pourrait être réalisée à distance ;
+  \item Difficulté à comprendre certaines informations présentes sur une ordonnance.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Objectifs du projet}
+
+\subsection{Objectif général}
+
+Développer une application mobile intelligente permettant de centraliser et faciliter le suivi pédiatrique de l'enfant, depuis la gestion de son profil jusqu'au suivi des traitements et aux consultations à distance.
+
+\subsection{Objectifs spécifiques}
+
+\begin{itemize}
+  \item \textbf{Centraliser} les informations médicales de l'enfant dans un espace unique et sécurisé ;
+  \item \textbf{Faciliter} la gestion des vaccinations et des rendez-vous médicaux ;
+  \item \textbf{Organiser} les rendez-vous et générer des rappels automatiques ;
+  \item \textbf{Fournir} un tableau de bord de suivi complet et lisible ;
+  \item \textbf{Faciliter} la communication entre le parent et le pédiatre ;
+  \item \textbf{Permettre} une consultation médicale en ligne (téléconsultation) ;
+  \item \textbf{Faciliter} le suivi des traitements prescrits (PediPharma) ;
+  \item \textbf{Intégrer} l'intelligence artificielle dans certaines fonctionnalités d'assistance ;
+  \item \textbf{Utiliser} l'OCR pour faciliter la saisie d'informations provenant d'une ordonnance ;
+  \item \textbf{Envoyer} des rappels et notifications ciblés aux utilisateurs ;
+  \item \textbf{Suivre} la croissance de l'enfant via des courbes et percentiles ;
+  \item \textbf{Gérer} les documents médicaux numériques (ordonnances, résultats d'analyses) ;
+  \item \textbf{Fournir} un guide d'urgences et de premiers secours pédiatriques ;
+  \item \textbf{Accompagner} les parents sur la nutrition et l'alimentation de l'enfant ;
+  \item \textbf{Permettre} un journal quotidien de suivi des symptômes.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Utilisateurs de l'application}
+
+L'application cible principalement deux types d'utilisateurs :
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{|p{4cm}|p{9cm}|}
+\hline
+\headrow \tblhead{Type d'utilisateur} & \tblhead{Fonctionnalités accessibles} \\
+\hline
+\endfirsthead
+\hline
+\headrow \tblhead{Type d'utilisateur} & \tblhead{Fonctionnalités accessibles} \\
+\hline
+\endhead
+\textbf{Parent} &
+Gérer son compte, gérer les profils des enfants, consulter le suivi, gérer les rendez-vous, gérer les vaccinations, gérer les traitements, communiquer avec le pédiatre, effectuer une téléconsultation, utiliser les fonctionnalités IA, suivre la croissance, gérer les documents, consulter les urgences, suivre la nutrition, tenir un journal de symptômes. \\
+\hline
+\rowcolor{rowgrey}
+\textbf{Pédiatre} &
+Gérer son profil professionnel, gérer ses disponibilités, accepter/refuser des demandes de consultation, effectuer des téléconsultations, consulter les informations partagées par les parents, communiquer avec les parents, rédiger des comptes rendus, consulter l'historique des consultations. \\
+\hline
+\end{longtable}
+
+% ---------------------------------------------------------
+\section{Les 10 modules fonctionnels}
+
+\subsection{Module 1 : Profil \& Carnet de l'enfant}
+
+\textit{Responsable : Membre 1}
+
+\begin{itemize}
+  \item Inscription et connexion sécurisée (parent / pédiatre) ;
+  \item Gestion du compte parent ;
+  \item Création d'un ou plusieurs profils enfant ;
+  \item Informations générales de l'enfant (nom, date de naissance, groupe sanguin, allergies) ;
+  \item Historique complet du suivi médical ;
+  \item Gestion des accès et confidentialité des données.
+\end{itemize}
+
+\subsection{Module 2 : Vaccination \& Rendez-vous}
+
+\textit{Responsable : Membre 2}
+
+\subsubsection{Vaccination}
+\begin{itemize}
+  \item Ajouter un vaccin administré ;
+  \item Consulter l'historique vaccinal ;
+  \item Voir les prochaines échéances de vaccination ;
+  \item Recevoir des rappels automatiques.
+\end{itemize}
+
+\subsubsection{Rendez-vous}
+\begin{itemize}
+  \item Ajouter un rendez-vous médical ;
+  \item Consulter le calendrier des rendez-vous ;
+  \item Modifier ou annuler un rendez-vous ;
+  \item Recevoir une notification de rappel.
+\end{itemize}
+
+\subsection{Module 3 : Consultation \& Tableau de bord}
+
+\textit{Responsable : Membre 3}
+
+\begin{itemize}
+  \item Vue globale du suivi de l'enfant ;
+  \item Derniers événements médicaux ;
+  \item Prochains rendez-vous ;
+  \item État des vaccinations ;
+  \item Traitements actifs ;
+  \item Historique des consultations ;
+  \item Statistiques de suivi ;
+  \item Génération d'un résumé intelligent avant consultation.
+\end{itemize}
+
+\subsection{Module 4 : Communication Parent \texorpdfstring{$\leftrightarrow$}{<->} Pédiatre \& Téléconsultation}
+
+\textit{Responsable : Membre 4}
+
+\subsubsection{Communication}
+\begin{itemize}
+  \item Recherche et sélection d'un pédiatre ;
+  \item Messagerie sécurisée entre parent et pédiatre ;
+  \item Échange de documents médicaux ;
+  \item Notifications en temps réel.
+\end{itemize}
+
+\subsubsection{Consultation en ligne}
+\begin{itemize}
+  \item Demande de consultation ;
+  \item Réservation d'un créneau disponible ;
+  \item Consultation vidéo sécurisée ;
+  \item Échange de documents pendant la consultation ;
+  \item Compte rendu post-consultation ;
+  \item Historique des téléconsultations.
+\end{itemize}
+
+\subsection{Module 5 : PediPharma -- Gestion des médicaments}
+
+\textit{Responsable : Membre 5}
+
+\subsubsection{Gestion des traitements}
+\begin{itemize}
+  \item Ajouter un médicament prescrit ;
+  \item Enregistrer la posologie prescrite ;
+  \item Date de début et de fin du traitement ;
+  \item Fréquence des prises ;
+  \item Médecin prescripteur.
+\end{itemize}
+
+\subsubsection{Rappels}
+\begin{itemize}
+  \item Notification de prise de médicament ;
+  \item Confirmation : pris / oublié / reporté ;
+  \item Historique des prises.
+\end{itemize}
+
+\subsection{Module 6 : Suivi de croissance}
+
+\textit{Responsable : Membre 2}
+
+\begin{itemize}
+  \item Enregistrement périodique du poids, de la taille et du périmètre crânien ;
+  \item Courbes de croissance interactives avec percentiles selon l'âge et le sexe ;
+  \item Calcul de l'IMC (Indice de Masse Corporelle) ;
+  \item Alertes en cas d'évolution anormale ;
+  \item Historique et exportation des données de croissance ;
+  \item Partage des courbes avec le pédiatre.
+\end{itemize}
+
+\subsection{Module 7 : Documents médicaux numériques}
+
+\textit{Responsable : Membre 1}
+
+\begin{itemize}
+  \item Stockage sécurisé des ordonnances, résultats d'analyses et compte rendus ;
+  \item Carnet de santé numérique exportable en PDF ;
+  \item Scan et OCR des ordonnances papier ;
+  \item Organisation par date et catégorie ;
+  \item Partage sécurisé de documents avec le pédiatre ;
+  \item Protection des documents par chiffrement.
+\end{itemize}
+
+\subsection{Module 8 : Urgences \& Premiers secours}
+
+\textit{Responsable : Membre 4}
+
+\begin{itemize}
+  \item Guide illustré des gestes d'urgence pédiatriques (étouffement, convulsion, brûlure, etc.) ;
+  \item Annuaire des numéros d'urgence (SAMU, pompiers, centre anti-poison) ;
+  \item Symptômes d'alerte à surveiller selon l'âge de l'enfant ;
+  \item Mode hors-ligne pour accéder aux fiches d'urgence sans connexion ;
+  \item Géolocalisation des hôpitaux et pédiatres les plus proches.
+\end{itemize}
+
+\subsection{Module 9 : Nutrition \& Alimentation}
+
+\textit{Responsable : Membre 5}
+
+\begin{itemize}
+  \item Recommandations nutritionnelles par tranche d'âge ;
+  \item Gestion des allergies alimentaires de l'enfant ;
+  \item Journal alimentaire quotidien ;
+  \item Alertes sur les aliments contre-indiqués selon l'âge ;
+  \item Recettes adaptées à l'âge et aux restrictions alimentaires ;
+  \item Suivi de l'allaitement (fréquence, durée) pour les nourrissons.
+\end{itemize}
+
+\subsection{Module 10 : Journal des symptômes}
+
+\textit{Responsable : Membre 3}
+
+\begin{itemize}
+  \item Journal quotidien de santé (fièvre, toux, comportement, sommeil, appétit) ;
+  \item Saisie rapide via des icônes intuitives ;
+  \item Historique des symptômes chronologique ;
+  \item Génération d'un rapport de symptômes exportable avant une consultation ;
+  \item Suggestions basées sur l'IA (sans diagnostic médical) ;
+  \item Partage du journal avec le pédiatre.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Intelligence artificielle}
+
+L'IA constitue une composante importante de PediCare AI, mais elle doit rester un outil d'assistance. La décision médicale reste du ressort exclusif du professionnel de santé.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{|p{4cm}|p{9cm}|}
+\hline
+\headrow \tblhead{Fonctionnalité IA} & \tblhead{Description} \\
+\hline
+\endfirsthead
+\hline
+\headrow \tblhead{Fonctionnalité IA} & \tblhead{Description} \\
+\hline
+\endhead
+Assistant intelligent & Le parent peut poser des questions générales concernant la santé pédiatrique. \\
+\hline
+\rowcolor{rowgrey}
+Résumé intelligent & L'application génère un résumé structuré des informations de l'enfant pour préparer une consultation. \\
+\hline
+Assistance PediPharma & L'IA explique certaines informations relatives aux médicaments enregistrés. \\
+\hline
+\rowcolor{rowgrey}
+OCR + IA & Une ordonnance photographiée est analysée pour identifier les informations textuelles pertinentes. \\
+\hline
+Personnalisation & Les fonctionnalités s'adaptent au profil de l'enfant (âge, sexe, antécédents). \\
+\hline
+\rowcolor{rowgrey}
+Analyse des symptômes & Suggestions contextuelles basées sur les symptômes saisis dans le journal. \\
+\hline
+Détection anomalie croissance & Alerte automatique en cas d'écart significatif sur les courbes de croissance. \\
+\hline
+\end{longtable}
+
+% ---------------------------------------------------------
+\section{Sécurité et confidentialité}
+
+La sécurité est particulièrement importante car l'application traite des données concernant des enfants.
+
+\begin{itemize}
+  \item \textbf{Authentification sécurisée} avec Firebase Authentication ;
+  \item \textbf{Gestion des rôles} (parent / pédiatre) avec permissions différenciées ;
+  \item \textbf{Contrôle des permissions} d'accès aux données ;
+  \item \textbf{Accès limité aux données} -- chaque parent n'accède qu'aux données de ses propres enfants ;
+  \item \textbf{Partage volontaire} des informations avec le pédiatre ;
+  \item \textbf{Protection des documents} médicaux par chiffrement ;
+  \item \textbf{Suppression des données} selon les besoins du projet ;
+  \item \textbf{Utilisation de données fictives ou anonymisées} pendant les phases de tests.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Technologies utilisées}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{|p{5cm}|p{3.5cm}|p{5cm}|}
+\hline
+\headrow \tblhead{Technologie} & \tblhead{Domaine} & \tblhead{Rôle principal} \\
+\hline
+\endfirsthead
+\hline
+\headrow \tblhead{Technologie} & \tblhead{Domaine} & \tblhead{Rôle principal} \\
+\hline
+\endhead
+Flutter / Dart & Développement & Application mobile Android/iOS \\
+\hline
+\rowcolor{rowgrey}
+Firebase Authentication & Sécurité & Authentification et gestion des sessions \\
+\hline
+Firebase Firestore & Base de données & Stockage des données utilisateurs \\
+\hline
+\rowcolor{rowgrey}
+Firebase Storage & Stockage & Stockage des documents et images \\
+\hline
+Firebase Cloud Messaging & Notifications & Notifications push \\
+\hline
+\rowcolor{rowgrey}
+OCR / ML Kit & Intelligence & Reconnaissance du texte des ordonnances \\
+\hline
+API IA (ex. OpenAI) & Intelligence & Assistant IA pédiatrique \\
+\hline
+\rowcolor{rowgrey}
+WebRTC / Agora & Vidéo & Téléconsultation en temps réel \\
+\hline
+fl\_chart & Visualisation & Graphiques et courbes de croissance \\
+\hline
+\rowcolor{rowgrey}
+Git / GitHub & Collaboration & Gestion du code source \\
+\hline
+Figma & Design & Maquettes UI/UX \\
+\hline
+\end{longtable}
+
+% ---------------------------------------------------------
+\section{Architecture générale}
+
+L'architecture de PediCare AI repose sur quatre couches principales :
+
+\subsection{Couche de présentation (Flutter)}
+\begin{itemize}
+  \item Application mobile multiplateforme (Android / iOS) développée avec Flutter ;
+  \item Interfaces distinctes pour le parent et le pédiatre ;
+  \item Navigation fluide entre les 10 modules fonctionnels ;
+  \item Mode hors-ligne pour les fonctionnalités critiques (urgences, guide).
+\end{itemize}
+
+\subsection{Couche applicative (Firebase)}
+\begin{itemize}
+  \item Authentification et gestion des sessions via Firebase Authentication ;
+  \item API REST pour les intégrations externes (IA, téléconsultation) ;
+  \item Moteur de notifications via Firebase Cloud Messaging ;
+  \item Intégration OCR/ML Kit pour la lecture des ordonnances.
+\end{itemize}
+
+\subsection{Couche de stockage}
+\begin{itemize}
+  \item Firebase Firestore pour les données structurées (profils, consultations, traitements) ;
+  \item Firebase Storage pour les fichiers (ordonnances, images, documents PDF) ;
+  \item Politique de rétention et de suppression des données selon les exigences RGPD.
+\end{itemize}
+
+\subsection{Couche d'intelligence artificielle}
+\begin{itemize}
+  \item API IA externe pour l'assistant pédiatrique intelligent ;
+  \item ML Kit pour la reconnaissance OCR des ordonnances ;
+  \item Modèles de personnalisation basés sur le profil de l'enfant.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Notifications}
+
+Le système de notifications permet notamment :
+
+\begin{itemize}
+  \item Rappel de vaccination ;
+  \item Rappel de rendez-vous ;
+  \item Rappel de prise de médicament ;
+  \item Confirmation d'un rendez-vous ;
+  \item Demande de téléconsultation ;
+  \item Nouveau message du pédiatre ;
+  \item Début prochain d'une téléconsultation ;
+  \item Alerte sur une anomalie de croissance détectée ;
+  \item Rappel de mise à jour du journal des symptômes.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Répartition du travail}
+
+\subsection{Mohammed Montassar Chihani -- Module 1 \& Module 7}
+
+\textbf{Modules :} Profil \& Carnet de l'enfant + Documents médicaux numériques
+
+\subsubsection*{CRUD}
+\begin{itemize}
+  \item Créer / lire / modifier / supprimer un compte parent (Firebase Auth) ;
+  \item Créer / lire / modifier / supprimer un profil enfant (Firestore) ;
+  \item Gérer plusieurs enfants par compte parent ;
+  \item Créer / lire / supprimer des documents médicaux (ordonnances, résultats, comptes rendus).
+\end{itemize}
+
+\subsubsection*{Fonctionnalités}
+\begin{itemize}
+  \item Inscription et connexion sécurisée avec gestion des rôles (parent / pédiatre) ;
+  \item Carnet de santé numérique avec historique complet ;
+  \item Stockage et organisation des documents par catégorie et date ;
+  \item Export du carnet de santé en PDF ;
+  \item Partage sécurisé de documents avec le pédiatre ;
+  \item Gestion des accès et permissions de confidentialité.
+\end{itemize}
+
+\subsubsection*{APIs utilisées}
+\begin{itemize}
+  \item \textbf{Firebase Authentication API} -- inscription, connexion, gestion des sessions et des rôles ;
+  \item \textbf{Firebase Firestore API} -- stockage et synchronisation des profils enfants et données du carnet ;
+  \item \textbf{Firebase Storage API} -- upload et téléchargement des documents médicaux (PDF, images) ;
+  \item \textbf{pdf / printing (Flutter)} -- génération et export du carnet de santé en PDF.
+\end{itemize}
+
+\subsubsection*{Partie IA}
+\begin{itemize}
+  \item \textbf{OCR (ML Kit Text Recognition API)} -- scan et extraction automatique des informations d'une ordonnance photographiée ;
+  \item Structuration automatique des données extraites (médicament, posologie, médecin prescripteur) avant enregistrement.
+\end{itemize}
+
+\vspace{0.5cm}
+% --------------------------------------------------
+\subsection{Wafe Chabbi -- Module 2 \& Module 6}
+
+\textbf{Modules :} Vaccination \& Rendez-vous + Suivi de croissance
+
+\subsubsection*{CRUD}
+\begin{itemize}
+  \item Créer / lire / modifier / supprimer un vaccin administré (Firestore) ;
+  \item Créer / lire / modifier / supprimer un rendez-vous médical (Firestore) ;
+  \item Créer / lire / modifier / supprimer une mesure de croissance (poids, taille, périmètre crânien).
+\end{itemize}
+
+\subsubsection*{Fonctionnalités}
+\begin{itemize}
+  \item Historique vaccinal complet par enfant ;
+  \item Affichage des prochaines échéances de vaccination selon le calendrier vaccinal ;
+  \item Calendrier interactif des rendez-vous médicaux ;
+  \item Rappels automatiques (vaccins et rendez-vous) via notifications push ;
+  \item Modification et annulation d'un rendez-vous ;
+  \item Courbes de croissance interactives (poids, taille, IMC) avec percentiles selon l'âge et le sexe ;
+  \item Alertes en cas d'évolution anormale de la courbe de croissance ;
+  \item Partage des courbes de croissance avec le pédiatre.
+\end{itemize}
+
+\subsubsection*{APIs utilisées}
+\begin{itemize}
+  \item \textbf{Firebase Firestore API} -- stockage des vaccins, rendez-vous et données de croissance ;
+  \item \textbf{Firebase Cloud Messaging (FCM) API} -- notifications push de rappel (vaccins, rendez-vous) ;
+  \item \textbf{fl\_chart (Flutter)} -- affichage des courbes de croissance interactives et graphiques ;
+  \item \textbf{table\_calendar (Flutter)} -- calendrier interactif des rendez-vous ;
+  \item \textbf{WHO Growth Standards API / données locales} -- percentiles et courbes de référence OMS pour la croissance.
+\end{itemize}
+
+\subsubsection*{Partie IA}
+\begin{itemize}
+  \item \textbf{Détection d'anomalie de croissance} -- algorithme basé sur les percentiles OMS pour alerter automatiquement en cas d'écart significatif ;
+  \item \textbf{Suggestion intelligente de la prochaine vaccination} -- calcul automatique des échéances selon l'âge de l'enfant et le calendrier vaccinal national.
+\end{itemize}
+
+\vspace{0.5cm}
+% --------------------------------------------------
+\subsection{Rahma Balloumi -- Module 3 \& Module 10}
+
+\textbf{Modules :} Consultation \& Tableau de bord + Journal des symptômes
+
+\subsubsection*{CRUD}
+\begin{itemize}
+  \item Créer / lire / modifier / supprimer une entrée dans le journal des symptômes (Firestore) ;
+  \item Lire et agréger les données de tous les modules pour le tableau de bord ;
+  \item Créer / lire / supprimer un résumé de consultation généré.
+\end{itemize}
+
+\subsubsection*{Fonctionnalités}
+\begin{itemize}
+  \item Tableau de bord centralisé : derniers événements, prochains RDV, vaccinations, traitements actifs ;
+  \item Statistiques de suivi global (graphiques, indicateurs clés) ;
+  \item Journal quotidien de santé (fièvre, toux, comportement, sommeil, appétit) ;
+  \item Saisie rapide des symptômes via icônes intuitives ;
+  \item Historique chronologique des symptômes ;
+  \item Génération d'un rapport de symptômes exportable avant consultation ;
+  \item Partage du journal avec le pédiatre.
+\end{itemize}
+
+\subsubsection*{APIs utilisées}
+\begin{itemize}
+  \item \textbf{Firebase Firestore API} -- lecture agrégée de tous les modules pour le dashboard, stockage du journal des symptômes ;
+  \item \textbf{fl\_chart (Flutter)} -- graphiques et statistiques de suivi ;
+  \item \textbf{pdf / printing (Flutter)} -- export du rapport de symptômes en PDF ;
+  \item \textbf{Firebase Cloud Messaging (FCM) API} -- rappel de mise à jour quotidienne du journal.
+\end{itemize}
+
+\subsubsection*{Partie IA}
+\begin{itemize}
+  \item \textbf{Résumé intelligent pré-consultation (OpenAI API / Gemini API)} -- génération automatique d'un résumé structuré des informations de l'enfant à partir du journal et de l'historique ;
+  \item \textbf{Analyse contextuelle des symptômes} -- suggestions non diagnostiques basées sur les symptômes saisis (ex. : «~Fièvre depuis 3 jours, pensez à consulter~»).
+\end{itemize}
+
+\vspace{0.5cm}
+% --------------------------------------------------
+\subsection{Arij Juili -- Module 4 \& Module 8}
+
+\textbf{Modules :} Communication Parent $\leftrightarrow$ Pédiatre \& Téléconsultation + Urgences \& Premiers secours
+
+\subsubsection*{CRUD}
+\begin{itemize}
+  \item Créer / lire / supprimer des messages dans la messagerie sécurisée (Firestore) ;
+  \item Créer / lire / modifier / supprimer une demande de téléconsultation ;
+  \item Créer / lire un compte rendu post-consultation (par le pédiatre) ;
+  \item Lire les fiches urgences (données statiques locales + Firestore).
+\end{itemize}
+
+\subsubsection*{Fonctionnalités}
+\begin{itemize}
+  \item Messagerie sécurisée en temps réel entre parent et pédiatre ;
+  \item Échange de documents pendant la messagerie ;
+  \item Recherche et sélection d'un pédiatre disponible ;
+  \item Demande, réservation et gestion des créneaux de téléconsultation ;
+  \item Consultation vidéo sécurisée en temps réel ;
+  \item Compte rendu post-consultation rédigé par le pédiatre ;
+  \item Historique des téléconsultations ;
+  \item Guide illustré des gestes d'urgence pédiatriques (mode hors-ligne) ;
+  \item Numéros d'urgence et géolocalisation des hôpitaux proches.
+\end{itemize}
+
+\subsubsection*{APIs utilisées}
+\begin{itemize}
+  \item \textbf{Firebase Firestore API} -- messagerie temps réel, gestion des demandes de consultation ;
+  \item \textbf{Firebase Cloud Messaging (FCM) API} -- notifications : nouveau message, confirmation RDV, début de téléconsultation ;
+  \item \textbf{Agora SDK / WebRTC API} -- consultation vidéo sécurisée en temps réel ;
+  \item \textbf{Google Maps API / Geolocator (Flutter)} -- géolocalisation des hôpitaux et pédiatres les plus proches ;
+  \item \textbf{Firebase Storage API} -- échange de documents pendant la messagerie.
+\end{itemize}
+
+\subsubsection*{Partie IA}
+\begin{itemize}
+  \item \textbf{Suggestions de créneaux intelligentes} -- proposition automatique des disponibilités du pédiatre les plus adaptées selon l'urgence signalée ;
+  \item \textbf{Triage intelligent des urgences} -- classification automatique de la gravité des symptômes signalés pour orienter le parent (urgences / consultation simple / observation).
+\end{itemize}
+
+\vspace{0.5cm}
+% --------------------------------------------------
+\subsection{Molka Ghazouani -- Module 5, Module 9 \& IA globale}
+
+\textbf{Modules :} PediPharma + Nutrition \& Alimentation + Intégration IA transversale
+
+\subsubsection*{CRUD}
+\begin{itemize}
+  \item Créer / lire / modifier / supprimer un traitement médicamenteux prescrit (Firestore) ;
+  \item Créer / lire / modifier / supprimer une entrée du journal alimentaire (Firestore) ;
+  \item Créer / lire / supprimer une allergie alimentaire enregistrée ;
+  \item Créer / lire / supprimer une conversation avec l'assistant IA.
+\end{itemize}
+
+\subsubsection*{Fonctionnalités}
+\begin{itemize}
+  \item Ajout d'un médicament prescrit avec posologie, fréquence, dates de début et de fin, médecin prescripteur ;
+  \item Rappels de prise de médicament avec confirmation (pris / oublié / reporté) ;
+  \item Historique des prises et des traitements passés ;
+  \item Journal alimentaire quotidien avec suivi par tranche d'âge ;
+  \item Gestion des allergies alimentaires (alertes sur les aliments contre-indiqués) ;
+  \item Recommandations nutritionnelles adaptées à l'âge et aux restrictions ;
+  \item Recettes adaptées à l'âge et aux allergies ;
+  \item Assistant IA pédiatrique conversationnel ;
+  \item Explication des médicaments enregistrés en langage simple.
+\end{itemize}
+
+\subsubsection*{APIs utilisées}
+\begin{itemize}
+  \item \textbf{Firebase Firestore API} -- stockage des traitements, journal alimentaire, allergies, historique IA ;
+  \item \textbf{Firebase Cloud Messaging (FCM) API} -- rappels de prise de médicament ;
+  \item \textbf{OpenAI API (GPT-4) / Google Gemini API} -- assistant IA pédiatrique conversationnel, explication des médicaments, suggestions nutritionnelles ;
+  \item \textbf{ML Kit Text Recognition API (OCR)} -- extraction des informations d'une ordonnance photographiée ;
+  \item \textbf{Open Food Facts API} -- informations nutritionnelles et allergènes des aliments ;
+  \item \textbf{RxNorm API / base médicaments locale} -- informations sur les médicaments (interactions, contre-indications pédiatriques).
+\end{itemize}
+
+\subsubsection*{Partie IA}
+\begin{itemize}
+  \item \textbf{Assistant pédiatrique IA (OpenAI / Gemini)} -- réponses aux questions générales des parents sur la santé de l'enfant, personnalisées selon le profil ;
+  \item \textbf{OCR + IA (ML Kit)} -- analyse automatique d'une ordonnance photographiée pour identifier médicament, posologie et fréquence ;
+  \item \textbf{Explication médicaments (IA)} -- traduction en langage simple des informations médicales des traitements enregistrés ;
+  \item \textbf{Personnalisation nutritionnelle (IA)} -- recommandations alimentaires adaptées en temps réel à l'âge, au poids et aux allergies de l'enfant.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Planning prévisionnel}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{|p{5cm}|p{9cm}|}
+\hline
+\headrow \tblhead{Phase} & \tblhead{Activités principales} \\
+\hline
+\endfirsthead
+\hline
+\headrow \tblhead{Phase} & \tblhead{Activités principales} \\
+\hline
+\endhead
+Phase 1 -- Analyse & Analyse des besoins, rédaction et validation du cahier des charges \\
+\hline
+\rowcolor{rowgrey}
+Phase 2 -- Conception & Maquettes UI/UX (Figma), architecture technique, modèle de données \\
+\hline
+Phase 3 -- Authentification & Mise en place Firebase, authentification, gestion des rôles parent/pédiatre \\
+\hline
+\rowcolor{rowgrey}
+Phase 4 -- Modules 1-3 & Profil enfant, vaccination, rendez-vous, tableau de bord \\
+\hline
+Phase 5 -- Modules 4-5 & Messagerie, téléconsultation, PediPharma \\
+\hline
+\rowcolor{rowgrey}
+Phase 6 -- Modules 6-10 & Croissance, documents, urgences, nutrition, journal symptômes \\
+\hline
+Phase 7 -- IA \& OCR & Intégration IA, OCR ordonnances, assistant pédiatrique \\
+\hline
+\rowcolor{rowgrey}
+Phase 8 -- Tests & Tests fonctionnels, tests de sécurité, tests d'interface, corrections \\
+\hline
+Phase 9 -- Documentation & Documentation technique, guide utilisateur, présentation finale \\
+\hline
+\end{longtable}
+
+% ---------------------------------------------------------
+\section{Tests}
+
+\subsection{Tests fonctionnels}
+\begin{itemize}
+  \item Inscription et connexion (parent / pédiatre) ;
+  \item Création d'un profil enfant ;
+  \item Ajout d'une vaccination et vérification des rappels ;
+  \item Création et modification d'un rendez-vous ;
+  \item Envoi d'un message via la messagerie sécurisée ;
+  \item Réservation et déroulement d'une téléconsultation ;
+  \item Ajout d'un traitement et réception des rappels de prise ;
+  \item Scan et lecture d'une ordonnance par OCR ;
+  \item Enregistrement des données de croissance et affichage des courbes ;
+  \item Consultation du guide d'urgences en mode hors-ligne ;
+  \item Saisie dans le journal des symptômes et génération du rapport ;
+  \item Fonctionnement de l'assistant IA.
+\end{itemize}
+
+\subsection{Tests de sécurité}
+\begin{itemize}
+  \item Authentification et gestion des sessions ;
+  \item Vérification des permissions par rôle ;
+  \item Impossibilité d'accéder aux données d'un autre parent ;
+  \item Accès du pédiatre uniquement aux données partagées volontairement.
+\end{itemize}
+
+\subsection{Tests d'interface}
+\begin{itemize}
+  \item Navigation fluide entre les modules ;
+  \item Affichage correct sur différentes tailles d'écran (responsive) ;
+  \item Expérience utilisateur sur Android et iOS.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Contraintes du projet}
+
+\subsection{Contraintes techniques}
+\begin{itemize}
+  \item Application développée exclusivement avec Flutter / Dart ;
+  \item Base de données sécurisée (Firebase Firestore avec règles de sécurité) ;
+  \item Connexion Internet nécessaire pour les services en ligne (IA, messagerie, vidéo) ;
+  \item Dépendance à des services externes pour l'IA et la téléconsultation vidéo ;
+  \item Mode hors-ligne obligatoire pour le module Urgences.
+\end{itemize}
+
+\subsection{Contraintes médicales}
+\begin{itemize}
+  \item L'application est un outil numérique d'accompagnement, non un dispositif médical ;
+  \item Elle ne doit pas être présentée comme un outil de diagnostic médical ;
+  \item Les fonctionnalités IA doivent clairement indiquer qu'elles ne remplacent pas un avis médical ;
+  \item Les fonctionnalités médicales doivent être limitées à ce qui est réalisable et vérifiable dans le cadre du projet universitaire.
+\end{itemize}
+
+\subsection{Contraintes légales et de confidentialité}
+\begin{itemize}
+  \item Respect du RGPD pour les données personnelles et médicales ;
+  \item Les données des enfants sont particulièrement sensibles et doivent être protégées ;
+  \item Consentement explicite de l'utilisateur pour le partage de données avec le pédiatre.
+\end{itemize}
+
+% ---------------------------------------------------------
+\section{Backlog du projet}
+
+\renewcommand{\arraystretch}{1.3}
+\small
+\begin{longtable}{|c|p{5.5cm}|p{2cm}|c|c|c|c|c|c|}
+\hline
+\multirow{2}{*}{\cellcolor{white}\textbf{Priorité}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{User Story}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{Module}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{Effort}} &
+\multicolumn{5}{c|}{\cellcolor{headgrey}\textbf{Sprint}} \\
+\cline{5-9}
+& & & & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
+\hline
+\endfirsthead
+\hline
+\multirow{2}{*}{\cellcolor{white}\textbf{Priorité}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{User Story}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{Module}} &
+\multirow{2}{*}{\cellcolor{white}\textbf{Effort}} &
+\multicolumn{5}{c|}{\cellcolor{headgrey}\textbf{Sprint}} \\
+\cline{5-9}
+& & & & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} \\
+\hline
+\endhead
+
+\multicolumn{9}{|l|}{\cellcolor{phasebg}\textcolor{white}{\textbf{Phase 1 -- Authentification \& Profil}}} \\
+\hline
+1 & En tant que parent, je veux m'inscrire et me connecter & M1 & 5 & & & & & \\
+\hline
+2 & En tant que pédiatre, je veux créer mon profil professionnel & M1 & 5 & & & & & \\
+\hline
+3 & En tant que parent, je veux créer le profil de mon enfant & M1 & 8 & & & & & \\
+\hline
+4 & En tant que parent, je veux gérer plusieurs profils enfants & M1 & 5 & & & & & \\
+\hline
+5 & En tant qu'utilisateur, je veux gérer mes accès et ma confidentialité & M1 & 3 & & & & & \\
+\hline
+
+\multicolumn{9}{|l|}{\cellcolor{phasebg}\textcolor{white}{\textbf{Phase 2 -- Vaccination, RDV \& Croissance}}} \\
+\hline
+1 & En tant que parent, je veux ajouter et consulter les vaccins & M2 & 8 & & & & & \\
+\hline
+2 & En tant que parent, je veux recevoir des rappels de vaccination & M2 & 5 & & & & & \\
+\hline
+3 & En tant que parent, je veux gérer les rendez-vous médicaux & M2 & 8 & & & & & \\
+\hline
+4 & En tant que parent, je veux enregistrer le poids et la taille de mon enfant & M6 & 8 & & & & & \\
+\hline
+5 & En tant que parent, je veux visualiser les courbes de croissance avec percentiles & M6 & 13 & & & & & \\
+\hline
+
+\multicolumn{9}{|l|}{\cellcolor{phasebg}\textcolor{white}{\textbf{Phase 3 -- Dashboard, Documents \& Symptômes}}} \\
+\hline
+1 & En tant que parent, je veux consulter un tableau de bord global du suivi & M3 & 13 & & & & & \\
+\hline
+2 & En tant que parent, je veux stocker et consulter les documents médicaux & M7 & 8 & & & & & \\
+\hline
+3 & En tant que parent, je veux scanner une ordonnance par OCR & M7 & 13 & & & & & \\
+\hline
+4 & En tant que parent, je veux tenir un journal quotidien de symptômes & M10 & 8 & & & & & \\
+\hline
+5 & En tant que parent, je veux générer un rapport de symptômes avant consultation & M10 & 5 & & & & & \\
+\hline
+
+\multicolumn{9}{|l|}{\cellcolor{phasebg}\textcolor{white}{\textbf{Phase 4 -- Communication \& Téléconsultation}}} \\
+\hline
+1 & En tant que parent, je veux envoyer un message sécurisé à mon pédiatre & M4 & 8 & & & & & \\
+\hline
+2 & En tant que parent, je veux réserver une téléconsultation & M4 & 8 & & & & & \\
+\hline
+3 & En tant que pédiatre, je veux accepter ou refuser une demande de consultation & M4 & 5 & & & & & \\
+\hline
+4 & En tant qu'utilisateur, je veux effectuer une consultation vidéo sécurisée & M4 & 13 & & & & & \\
+\hline
+5 & En tant que pédiatre, je veux rédiger un compte rendu post-consultation & M4 & 5 & & & & & \\
+\hline
+6 & En tant que parent, je veux consulter le guide d'urgences hors-ligne & M8 & 8 & & & & & \\
+\hline
+
+\multicolumn{9}{|l|}{\cellcolor{phasebg}\textcolor{white}{\textbf{Phase 5 -- PediPharma, Nutrition \& IA}}} \\
+\hline
+1 & En tant que parent, je veux ajouter un traitement prescrit & M5 & 8 & & & & & \\
+\hline
+2 & En tant que parent, je veux recevoir des rappels de prise de médicament & M5 & 8 & & & & & \\
+\hline
+3 & En tant que parent, je veux suivre le journal alimentaire de mon enfant & M9 & 8 & & & & & \\
+\hline
+4 & En tant que parent, je veux poser des questions à l'assistant IA & IA & 13 & & & & & \\
+\hline
+5 & En tant que parent, je veux générer un résumé IA avant consultation & IA & 8 & & & & & \\
+\hline
+
+\caption{Backlog complet du projet PediCare AI, organisé par phase}
+\end{longtable}
+
+\normalsize
+
+% ---------------------------------------------------------
+\section{Livrables}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{longtable}{|c|p{4cm}|p{8cm}|}
+\hline
+\headrow \tblhead{N°} & \tblhead{Livrable} & \tblhead{Description} \\
+\hline
+\endfirsthead
+\hline
+\headrow \tblhead{N°} & \tblhead{Livrable} & \tblhead{Description} \\
+\hline
+\endhead
+1 & Cahier des charges & Document de cadrage fonctionnel et technique (le présent document) \\
+\hline
+\rowcolor{rowgrey}
+2 & Maquettes UI/UX & Wireframes et interfaces finales sur Figma avec parcours utilisateur \\
+\hline
+3 & Architecture technique & Choix technologiques, modèle de données, schéma d'architecture \\
+\hline
+\rowcolor{rowgrey}
+4 & Application mobile (MVP) & Version fonctionnelle Flutter déployable sur Android et iOS \\
+\hline
+5 & Modules implémentés & Les 10 modules fonctionnels développés et testés \\
+\hline
+\rowcolor{rowgrey}
+6 & Intégration IA \& OCR & Assistant pédiatrique et lecture d'ordonnances opérationnels \\
+\hline
+7 & Plan de tests & Scénarios de test fonctionnel, sécurité et interface \\
+\hline
+\rowcolor{rowgrey}
+8 & Rapport de tests & Résultats des tests et corrections effectuées \\
+\hline
+9 & Documentation technique & Documentation d'installation, d'architecture et d'exploitation \\
+\hline
+\rowcolor{rowgrey}
+10 & Présentation finale & Démonstration des fonctionnalités, de l'IA, de la téléconsultation et de PediPharma \\
+\hline
+\end{longtable}
+
+% ---------------------------------------------------------
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+
+PediCare AI est un projet de santé numérique centré sur la pédiatrie qui cherche à simplifier le suivi de l'enfant et à rapprocher les parents des professionnels de santé. L'application regroupe dans un même environnement 10 modules fonctionnels couvrant l'ensemble du parcours de soin pédiatrique : gestion du carnet de l'enfant, vaccination et rendez-vous, tableau de bord de consultation, communication avec le pédiatre et téléconsultation, gestion intelligente des traitements avec PediPharma, suivi de croissance, documents médicaux numériques, guide d'urgences, nutrition et journal des symptômes.
+
+L'intégration de l'intelligence artificielle et de l'OCR apporte une dimension innovante au projet tout en conservant une approche responsable : l'IA accompagne l'utilisateur, tandis que la décision médicale reste du ressort du professionnel de santé.
+
+\end{document}

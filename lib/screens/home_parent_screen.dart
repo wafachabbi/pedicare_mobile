@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'vaccination/vaccination_screen.dart';
+import 'rendezvous/rendezvous_screen.dart';
 
 class HomeParentScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -36,7 +38,7 @@ class HomeParentScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildSectionTitle('Mes modules'),
                 const SizedBox(height: 14),
-                _buildModulesGrid(),
+                _buildModulesGrid(context),
                 const SizedBox(height: 24),
                 _buildSectionTitle('Activité récente'),
                 const SizedBox(height: 14),
@@ -221,14 +223,14 @@ class HomeParentScreen extends StatelessWidget {
             fontWeight: FontWeight.w700));
   }
 
-  Widget _buildModulesGrid() {
+  Widget _buildModulesGrid(BuildContext context) {
     final modules = [
-      {'emoji': '📋', 'title': 'Carnet\nde l\'enfant', 'color': const Color(0xFF1E6FDB)},
-      {'emoji': '💉', 'title': 'Vaccination &\nRendez-vous', 'color': const Color(0xFF00C9A7)},
-      {'emoji': '📊', 'title': 'Tableau\nde bord', 'color': const Color(0xFF9B59B6)},
-      {'emoji': '💊', 'title': 'PediPharma', 'color': const Color(0xFFE74C3C)},
-      {'emoji': '👨‍⚕️', 'title': 'Mon\nPédiatre', 'color': const Color(0xFFE67E22)},
-      {'emoji': '🤖', 'title': 'Assistant\nIA', 'color': const Color(0xFF3498DB)},
+      {'emoji': '📋', 'title': 'Carnet\nde l\'enfant', 'color': const Color(0xFF1E6FDB), 'action': null},
+      {'emoji': '💉', 'title': 'Vaccination &\nRendez-vous', 'color': const Color(0xFF00C9A7), 'action': 'vaccination'},
+      {'emoji': '📊', 'title': 'Tableau\nde bord', 'color': const Color(0xFF9B59B6), 'action': null},
+      {'emoji': '💊', 'title': 'PediPharma', 'color': const Color(0xFFE74C3C), 'action': null},
+      {'emoji': '👨‍⚕️', 'title': 'Mon\nPédiatre', 'color': const Color(0xFFE67E22), 'action': null},
+      {'emoji': '🤖', 'title': 'Assistant\nIA', 'color': const Color(0xFF3498DB), 'action': null},
     ];
     return GridView.count(
       crossAxisCount: 2,
@@ -238,12 +240,41 @@ class HomeParentScreen extends StatelessWidget {
       mainAxisSpacing: 12,
       childAspectRatio: 1.55,
       children: modules
-          .map((m) => _ModuleCard(
-              emoji: m['emoji'] as String,
-              title: m['title'] as String,
-              color: m['color'] as Color))
+          .map((m) => GestureDetector(
+                onTap: () => _onModuleTap(context, m['action'] as String?),
+                child: _ModuleCard(
+                    emoji: m['emoji'] as String,
+                    title: m['title'] as String,
+                    color: m['color'] as Color),
+              ))
           .toList(),
     );
+  }
+
+  void _onModuleTap(BuildContext context, String? action) {
+    final name = user['name'] ?? 'Enfant';
+    const enfantId = 'enfant_demo';
+    switch (action) {
+      case 'vaccination':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VaccinationScreen(
+              enfantId: enfantId,
+              enfantNom: name,
+            ),
+          ),
+        );
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Module en cours de développement...'),
+            backgroundColor: AppColors.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
   }
 
   Widget _buildActivity() {
