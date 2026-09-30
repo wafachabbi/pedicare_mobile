@@ -4,6 +4,8 @@ import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'vaccination/vaccination_screen.dart';
 import 'rendezvous/rendezvous_screen.dart';
+import 'croissance/croissance_screen.dart';
+import 'croissance/croissance_screen.dart';
 
 class HomeParentScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -230,8 +232,7 @@ class HomeParentScreen extends StatelessWidget {
       {'emoji': '📊', 'title': 'Tableau\nde bord', 'color': const Color(0xFF9B59B6), 'action': null},
       {'emoji': '💊', 'title': 'PediPharma', 'color': const Color(0xFFE74C3C), 'action': null},
       {'emoji': '👨‍⚕️', 'title': 'Mon\nPédiatre', 'color': const Color(0xFFE67E22), 'action': null},
-      {'emoji': '🤖', 'title': 'Assistant\nIA', 'color': const Color(0xFF3498DB), 'action': null},
-    ];
+      {'emoji': '🤖', 'title': 'Assistant\nIA', 'color': const Color(0xFF3498DB), 'action': null},    ];
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,

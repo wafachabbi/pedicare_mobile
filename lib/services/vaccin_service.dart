@@ -1,41 +1,41 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/vaccin_model.dart';
+import 'api_config.dart';
 
 class VaccinService {
-  static final _db = FirebaseFirestore.instance;
-
-  static CollectionReference _col(String enfantId) => _db
-      .collection('enfants')
-      .doc(enfantId)
-      .collection('vaccins');
-
   static Future<List<VaccinModel>> getVaccins(String enfantId) async {
     try {
-      final snap = await _col(enfantId)
-          .orderBy('dateAdministre', descending: true)
-          .get();
-      return snap.docs
-          .map((d) => VaccinModel.fromMap({'id': d.id, ...d.data() as Map<String, dynamic>}))
-          .toList();
+      final res = await http.get(
+        Uri.parse('${ApiConfig.vaccins}?enfant_id=$enfantId'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body);
+      final list = data['vaccins'] as List;
+      return list.map((e) => VaccinModel.fromMap(_normalize(e))).toList();
     } catch (_) {
       return [];
     }
   }
 
   static Future<void> addVaccin(VaccinModel vaccin) async {
-    final data = vaccin.toMap();
-    data.remove('id');
-    await _col(vaccin.enfantId).doc(vaccin.id).set(data);
+    await http.post(
+      Uri.parse(ApiConfig.vaccins),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(vaccin.toMap()),
+    );
   }
 
   static Future<void> updateVaccin(VaccinModel vaccin) async {
-    final data = vaccin.toMap();
-    data.remove('id');
-    await _col(vaccin.enfantId).doc(vaccin.id).update(data);
+    await http.put(
+      Uri.parse('${ApiConfig.vaccins}?id=${vaccin.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(vaccin.toMap()),
+    );
   }
 
   static Future<void> deleteVaccin(String enfantId, String id) async {
-    await _col(enfantId).doc(id).delete();
+    await http.delete(Uri.parse('${ApiConfig.vaccins}?id=$id'));
   }
 
   static Future<List<VaccinModel>> getProchainesEcheances(String enfantId) async {
@@ -46,4 +46,18 @@ class VaccinService {
         .toList()
       ..sort((a, b) => a.prochaineDate!.compareTo(b.prochaineDate!));
   }
+
+  // MySQL retourne des noms snake_case — mapper vers camelCase attendu par le model
+  static Map<String, dynamic> _normalize(Map<String, dynamic> e) => {
+    'id':             e['id'].toString(),
+    'nom':            e['nom'] ?? '',
+    'maladie':        e['maladie'] ?? '',
+    'dateAdministre': e['date_administre'] ?? '',
+    'medecin':        e['medecin'] ?? '',
+    'lieu':           e['lieu'] ?? '',
+    'lotNumero':      e['lot_numero'] ?? '',
+    'prochaineDate':  e['prochaine_date'],
+    'enfantId':       e['enfant_id'].toString(),
+    'notes':          e['notes'] ?? '',
+  };
 }

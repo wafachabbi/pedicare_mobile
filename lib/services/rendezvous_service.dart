@@ -1,41 +1,41 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/rendezvous_model.dart';
+import 'api_config.dart';
 
 class RendezVousService {
-  static final _db = FirebaseFirestore.instance;
-
-  static CollectionReference _col(String enfantId) => _db
-      .collection('enfants')
-      .doc(enfantId)
-      .collection('rendezvous');
-
   static Future<List<RendezVousModel>> getRendezVous(String enfantId) async {
     try {
-      final snap = await _col(enfantId)
-          .orderBy('dateHeure')
-          .get();
-      return snap.docs
-          .map((d) => RendezVousModel.fromMap({'id': d.id, ...d.data() as Map<String, dynamic>}))
-          .toList();
+      final res = await http.get(
+        Uri.parse('${ApiConfig.rendezvous}?enfant_id=$enfantId'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body);
+      final list = data['rendezvous'] as List;
+      return list.map((e) => RendezVousModel.fromMap(_normalize(e))).toList();
     } catch (_) {
       return [];
     }
   }
 
   static Future<void> addRendezVous(RendezVousModel rdv) async {
-    final data = rdv.toMap();
-    data.remove('id');
-    await _col(rdv.enfantId).doc(rdv.id).set(data);
+    await http.post(
+      Uri.parse(ApiConfig.rendezvous),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(rdv.toMap()),
+    );
   }
 
   static Future<void> updateRendezVous(RendezVousModel rdv) async {
-    final data = rdv.toMap();
-    data.remove('id');
-    await _col(rdv.enfantId).doc(rdv.id).update(data);
+    await http.put(
+      Uri.parse('${ApiConfig.rendezvous}?id=${rdv.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(rdv.toMap()),
+    );
   }
 
   static Future<void> deleteRendezVous(String enfantId, String id) async {
-    await _col(enfantId).doc(id).delete();
+    await http.delete(Uri.parse('${ApiConfig.rendezvous}?id=$id'));
   }
 
   static Future<List<RendezVousModel>> getProchains(String enfantId) async {
@@ -45,4 +45,17 @@ class RendezVousService {
         .where((r) => r.dateHeure.isAfter(now) && r.statut != StatutRDV.annule)
         .toList();
   }
+
+  static Map<String, dynamic> _normalize(Map<String, dynamic> e) => {
+    'id':         e['id'].toString(),
+    'titre':      e['titre'] ?? '',
+    'medecin':    e['medecin'] ?? '',
+    'specialite': e['specialite'] ?? '',
+    'lieu':       e['lieu'] ?? '',
+    'dateHeure':  e['date_heure'] ?? '',
+    'statut':     e['statut'] ?? 'enAttente',
+    'enfantId':   e['enfant_id'].toString(),
+    'notes':      e['notes'] ?? '',
+    'type':       e['type'] ?? 'presentiel',
+  };
 }
