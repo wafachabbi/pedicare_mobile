@@ -11,11 +11,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Auth App',
+      title: 'PediCare AI',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'SF Pro Display',
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6C63FF)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E6FDB)),
       ),
       home: const LoginScreen(),
     );

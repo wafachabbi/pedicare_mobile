@@ -1,80 +1,66 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'api_config.dart';
 
 class AuthService {
-  static Future<File> _getUsersFile() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return File('${dir.path}/users.json');
-  }
+  static const _userKey = 'logged_user';
 
-  static Future<File> _getSessionFile() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return File('${dir.path}/session.json');
-  }
-
-  static Future<Map<String, dynamic>> _readUsers() async {
-    try {
-      final file = await _getUsersFile();
-      if (!await file.exists()) return {};
-      final content = await file.readAsString();
-      return Map<String, dynamic>.from(jsonDecode(content));
-    } catch (_) {
-      return {};
-    }
-  }
-
-  static Future<void> _writeUsers(Map<String, dynamic> users) async {
-    final file = await _getUsersFile();
-    await file.writeAsString(jsonEncode(users));
-  }
-
-  // role = 'parent' ou 'pediatre'
+  // ── Inscription ──────────────────────────────────────────
   static Future<String?> signup({
     required String name,
     required String email,
     required String password,
     required String role,
   }) async {
-    final users = await _readUsers();
-    if (users.containsKey(email)) {
-      return 'Un compte avec cet email existe déjà.';
+    try {
+      final res = await http.post(
+        Uri.parse(ApiConfig.signup),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'name': name, 'email': email, 'password': password, 'role': role}),
+      );
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 201) return null;
+      return data['error'] ?? 'Erreur lors de l\'inscription.';
+    } catch (_) {
+      return 'Impossible de contacter le serveur.';
     }
-    users[email] = {
-      'name': name,
-      'email': email,
-      'password': password,
-      'role': role,
-    };
-    await _writeUsers(users);
-    return null;
   }
 
+  // ── Connexion ─────────────────────────────────────────────
   static Future<Map<String, dynamic>?> login({
     required String email,
     required String password,
   }) async {
-    final users = await _readUsers();
-    final user = users[email];
-    if (user == null || user['password'] != password) return null;
-    final sessionFile = await _getSessionFile();
-    await sessionFile.writeAsString(jsonEncode(user));
-    return Map<String, dynamic>.from(user);
-  }
-
-  static Future<void> logout() async {
-    final file = await _getSessionFile();
-    if (await file.exists()) await file.delete();
-  }
-
-  static Future<Map<String, dynamic>?> getLoggedInUser() async {
     try {
-      final file = await _getSessionFile();
-      if (!await file.exists()) return null;
-      final content = await file.readAsString();
-      return Map<String, dynamic>.from(jsonDecode(content));
+      final res = await http.post(
+        Uri.parse(ApiConfig.login),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.body);
+      final user = data['user'] as Map<String, dynamic>;
+      // Persister la session localement
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_userKey, jsonEncode(user));
+      return user;
     } catch (_) {
       return null;
     }
+  }
+
+  // ── Déconnexion ───────────────────────────────────────────
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_userKey);
+  }
+
+  // ── Utilisateur connecté ──────────────────────────────────
+  static Future<Map<String, dynamic>?> getLoggedInUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_userKey);
+    if (raw == null) return null;
+    return jsonDecode(raw) as Map<String, dynamic>;
   }
 }

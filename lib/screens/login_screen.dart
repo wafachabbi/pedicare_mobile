@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _loading = false;
+  String _selectedRole = 'parent'; // 'parent' ou 'pediatre'
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -63,8 +64,14 @@ class _LoginScreenState extends State<LoginScreen>
     if (user == null) {
       _showError('Email ou mot de passe incorrect.');
     } else {
+      final role = (user['role'] ?? 'parent').toString().toLowerCase();
+      if (role != _selectedRole) {
+        _showError(_selectedRole == 'parent'
+            ? 'Ce compte est un compte Pédiatre. Sélectionnez "Pédiatre".'
+            : 'Ce compte est un compte Parent. Sélectionnez "Parent".');
+        return;
+      }
       if (mounted) {
-        final role = user['role'] ?? 'parent';
         final destination = role == 'pediatre'
             ? HomePediatreScreen(user: user)
             : HomeParentScreen(user: user);
@@ -287,20 +294,26 @@ class _LoginScreenState extends State<LoginScreen>
     return Row(
       children: [
         Expanded(
-          child: _RoleChip(
-            emoji: '👨‍👩‍👦',
-            label: 'Parent',
-            description: 'Suivi enfant',
-            selected: true,
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedRole = 'parent'),
+            child: _RoleChip(
+              emoji: '👨‍👩‍👦',
+              label: 'Parent',
+              description: 'Suivi enfant',
+              selected: _selectedRole == 'parent',
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _RoleChip(
-            emoji: '👨‍⚕️',
-            label: 'Pédiatre',
-            description: 'Espace pro',
-            selected: false,
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedRole = 'pediatre'),
+            child: _RoleChip(
+              emoji: '👨‍⚕️',
+              label: 'Pédiatre',
+              description: 'Espace pro',
+              selected: _selectedRole == 'pediatre',
+            ),
           ),
         ),
       ],
