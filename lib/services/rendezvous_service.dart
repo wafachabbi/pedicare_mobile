@@ -18,6 +18,20 @@ class RendezVousService {
     }
   }
 
+  static Future<List<RendezVousModel>> getRendezVousPediatre(String pediatreId) async {
+    try {
+      final res = await http.get(
+        Uri.parse('${ApiConfig.rendezvous}?pediatre_id=$pediatreId'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body);
+      final list = data['rendezvous'] as List;
+      return list.map((e) => RendezVousModel.fromMap(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   static Future<void> addRendezVous(RendezVousModel rdv) async {
     await http.post(
       Uri.parse(ApiConfig.rendezvous),
