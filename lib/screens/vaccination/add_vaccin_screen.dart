@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../models/vaccin_model.dart';
+import '../../models/pediatre_model.dart';
 import '../../services/vaccin_service.dart';
+import '../../services/pediatre_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/glass_text_field.dart';
 import '../../widgets/gradient_button.dart';
 
 class AddVaccinScreen extends StatefulWidget {
   final String enfantId;
-  final VaccinModel? vaccin; // non-null = mode édition
+  final VaccinModel? vaccin;
 
   const AddVaccinScreen({super.key, required this.enfantId, this.vaccin});
 
@@ -18,7 +20,6 @@ class AddVaccinScreen extends StatefulWidget {
 class _AddVaccinScreenState extends State<AddVaccinScreen> {
   final _nomController = TextEditingController();
   final _maladieController = TextEditingController();
-  final _medecinController = TextEditingController();
   final _lieuController = TextEditingController();
   final _lotController = TextEditingController();
   final _notesController = TextEditingController();
@@ -27,7 +28,10 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
   DateTime? _prochaineDate;
   bool _loading = false;
 
-  // Vaccins courants suggérés
+  List<PediatreModel> _pediatres = [];
+  PediatreModel? _selectedPediatre;
+  bool _loadingPediatres = true;
+
   final List<Map<String, String>> _suggestions = [
     {'nom': 'BCG', 'maladie': 'Tuberculose'},
     {'nom': 'DTCoq-Hib-HB-Polio', 'maladie': 'Diphtérie, Tétanos, Coqueluche'},
@@ -44,10 +48,10 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
   @override
   void initState() {
     super.initState();
+    _loadPediatres();
     if (widget.vaccin != null) {
       _nomController.text = widget.vaccin!.nom;
       _maladieController.text = widget.vaccin!.maladie;
-      _medecinController.text = widget.vaccin!.medecin;
       _lieuController.text = widget.vaccin!.lieu;
       _lotController.text = widget.vaccin!.lotNumero;
       _notesController.text = widget.vaccin!.notes;
@@ -56,11 +60,26 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
     }
   }
 
+  Future<void> _loadPediatres() async {
+    final list = await PediatreService.getPediatres();
+    if (mounted) {
+      setState(() {
+        _pediatres = list;
+        _loadingPediatres = false;
+        if (widget.vaccin != null && list.isNotEmpty) {
+          try {
+            _selectedPediatre = list.firstWhere(
+                (p) => p.name == widget.vaccin!.medecin);
+          } catch (_) {}
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _nomController.dispose();
     _maladieController.dispose();
-    _medecinController.dispose();
     _lieuController.dispose();
     _lotController.dispose();
     _notesController.dispose();
@@ -99,7 +118,7 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
   }
 
   Future<void> _save() async {
-    if (_nomController.text.isEmpty || _medecinController.text.isEmpty) {
+    if (_nomController.text.isEmpty || _selectedPediatre == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Nom du vaccin et médecin obligatoires.'),
@@ -113,12 +132,11 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
     setState(() => _loading = true);
 
     final vaccin = VaccinModel(
-      id: widget.vaccin?.id ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.vaccin?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       nom: _nomController.text.trim(),
       maladie: _maladieController.text.trim(),
       dateAdministre: _dateAdministre,
-      medecin: _medecinController.text.trim(),
+      medecin: _selectedPediatre!.name,
       lieu: _lieuController.text.trim(),
       lotNumero: _lotController.text.trim(),
       prochaineDate: _prochaineDate,
@@ -183,11 +201,7 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
                       const SizedBox(height: 20),
                       _buildSectionLabel('Administration'),
                       const SizedBox(height: 12),
-                      GlassTextField(
-                        hint: 'Médecin *',
-                        icon: Icons.medical_services_outlined,
-                        controller: _medecinController,
-                      ),
+                      _buildPediatreSelector(),
                       const SizedBox(height: 12),
                       GlassTextField(
                         hint: 'Lieu (hôpital, cabinet...)',
@@ -320,6 +334,91 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
             color: AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700));
+  }
+
+  Widget _buildPediatreSelector() {
+    if (_loadingPediatres) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.glassBorder),
+        ),
+        child: const Row(children: [
+          SizedBox(width: 16, height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondary)),
+          SizedBox(width: 12),
+          Text('Chargement des pédiatres...',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        ]),
+      );
+    }
+    if (_pediatres.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.glassBorder),
+        ),
+        child: const Row(children: [
+          Text('👨‍⚕️', style: TextStyle(fontSize: 18)),
+          SizedBox(width: 10),
+          Text('Aucun pédiatre disponible',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        ]),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: _pediatres.map((p) {
+        final selected = _selectedPediatre?.id == p.id;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedPediatre = p),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: selected
+                  ? const Color(0xFF00C9A7).withOpacity(0.1)
+                  : AppColors.inputFill,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected ? const Color(0xFF00C9A7) : AppColors.glassBorder,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00C9A7).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(child: Text('👨‍⚕️', style: TextStyle(fontSize: 20))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Dr. ${p.name}',
+                      style: const TextStyle(color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text(p.email,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
+                ],
+              )),
+              if (selected)
+                const Icon(Icons.check_circle_rounded,
+                    color: Color(0xFF00C9A7), size: 20),
+            ]),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   Widget _buildDatePicker({

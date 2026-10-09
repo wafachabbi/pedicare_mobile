@@ -190,7 +190,6 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
                         controller: _titreController,
                       ),
                       const SizedBox(height: 12),
-                      // Champ médecin libre si pas de pédiatre sélectionné
                       if (_selectedPediatre == null)
                         GlassTextField(
                           hint: 'Médecin *',
@@ -198,7 +197,6 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
                           controller: _medecinController,
                         ),
                       if (_selectedPediatre == null) const SizedBox(height: 12),
-                      _buildSpecialiteDropdown(),
                       const SizedBox(height: 20),
                       _buildSectionLabel('Date et heure'),
                       const SizedBox(height: 12),

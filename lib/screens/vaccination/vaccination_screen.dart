@@ -73,7 +73,6 @@ class _VaccinationScreenState extends State<VaccinationScreen>
             children: [
               _buildHeader(context),
               _buildStats(),
-              _buildRDVButton(context),
               const SizedBox(height: 8),
               _buildTabBar(),
               Expanded(
