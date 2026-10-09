@@ -118,7 +118,8 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
   }
 
   Future<void> _save() async {
-    if (_titreController.text.isEmpty || _medecinController.text.isEmpty) {
+    if (_titreController.text.isEmpty ||
+        (_selectedPediatre == null && _medecinController.text.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Titre et médecin obligatoires.'),
