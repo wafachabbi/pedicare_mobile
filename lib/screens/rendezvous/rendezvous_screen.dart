@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/rendezvous_model.dart';
 import '../../services/rendezvous_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_rendezvous_screen.dart';
 
@@ -40,7 +41,15 @@ class _RendezVousScreenState extends State<RendezVousScreen>
   Future<void> _loadData() async {
     setState(() => _loading = true);
     final rdvs = await RendezVousService.getRendezVous(widget.enfantId);
-    if (mounted) setState(() { _rdvs = rdvs; _loading = false; });
+    if (mounted) {
+      setState(() { _rdvs = rdvs; _loading = false; });
+      // Planifier les rappels pour les RDV à venir
+      final prochains = rdvs.where((r) =>
+          r.dateHeure.isAfter(DateTime.now()) &&
+          r.statut != StatutRDV.annule).toList();
+      await NotificationService.planifierRappelsRDV(
+          prochains, widget.enfantNom);
+    }
   }
 
   List<RendezVousModel> get _prochains {
@@ -231,10 +240,14 @@ class _RendezVousScreenState extends State<RendezVousScreen>
         rdv: rdvs[i],
         onStatusChange: (statut) async {
           await RendezVousService.updateRendezVous(rdvs[i].copyWith(statut: statut));
+          if (statut == StatutRDV.annule) {
+            await NotificationService.annulerRappelsRDV(rdvs[i].id);
+          }
           _loadData();
         },
         onDelete: () async {
-        await RendezVousService.deleteRendezVous(rdvs[i].enfantId, rdvs[i].id);
+          await RendezVousService.deleteRendezVous(rdvs[i].enfantId, rdvs[i].id);
+          await NotificationService.annulerRappelsRDV(rdvs[i].id);
           _loadData();
         },
         onEdit: () async {
