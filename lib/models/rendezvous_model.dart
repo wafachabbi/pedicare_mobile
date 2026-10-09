@@ -11,6 +11,9 @@ class RendezVousModel {
   final String enfantId;
   final String notes;
   final String type;
+  final String? pediatreId;
+  final String? enfantNomComplet; // enrichi par JOIN côté pédiatre
+  final String? parentNom;
 
   RendezVousModel({
     required this.id,
@@ -23,6 +26,9 @@ class RendezVousModel {
     required this.enfantId,
     this.notes = '',
     this.type = 'presentiel',
+    this.pediatreId,
+    this.enfantNomComplet,
+    this.parentNom,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +43,7 @@ class RendezVousModel {
       'enfantId': enfantId,
       'notes': notes,
       'type': type,
+      'pediatreId': pediatreId,
     };
   }
 
@@ -49,19 +56,24 @@ class RendezVousModel {
     }
 
     return RendezVousModel(
-      id: map['id'] ?? '',
+      id: map['id'].toString(),
       titre: map['titre'] ?? '',
       medecin: map['medecin'] ?? '',
       specialite: map['specialite'] ?? '',
       lieu: map['lieu'] ?? '',
-      dateHeure: parseDate(map['dateHeure']),
+      dateHeure: parseDate(map['dateHeure'] ?? map['date_heure']),
       statut: StatutRDV.values.firstWhere(
         (e) => e.name == map['statut'],
         orElse: () => StatutRDV.enAttente,
       ),
-      enfantId: map['enfantId'] ?? '',
+      enfantId: map['enfantId']?.toString() ?? map['enfant_id']?.toString() ?? '',
       notes: map['notes'] ?? '',
       type: map['type'] ?? 'presentiel',
+      pediatreId: map['pediatreId']?.toString() ?? map['pediatre_id']?.toString(),
+      enfantNomComplet: map['enfant_prenom'] != null
+          ? '${map['enfant_prenom']} ${map['enfant_nom']}'
+          : null,
+      parentNom: map['parent_nom'],
     );
   }
 
@@ -77,6 +89,9 @@ class RendezVousModel {
       enfantId: enfantId,
       notes: notes ?? this.notes,
       type: type,
+      pediatreId: pediatreId,
+      enfantNomComplet: enfantNomComplet,
+      parentNom: parentNom,
     );
   }
 }

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../models/croissance_model.dart';
 import '../../services/croissance_service.dart';
+import '../../services/croissance_pdf_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_mesure_screen.dart';
 
 class CroissanceScreen extends StatefulWidget {
   final String enfantId;
   final String enfantNom;
+  final String enfantSexe;
+  final String enfantAge;
 
   const CroissanceScreen({
     super.key,
     required this.enfantId,
     required this.enfantNom,
+    this.enfantSexe = 'M',
+    this.enfantAge = '',
   });
 
   @override
@@ -84,19 +89,55 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
             ),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Suivi de croissance',
-                  style: TextStyle(color: AppColors.textPrimary,
-                      fontSize: 20, fontWeight: FontWeight.w700)),
-              Text(widget.enfantNom,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Suivi de croissance',
+                    style: TextStyle(color: AppColors.textPrimary,
+                        fontSize: 20, fontWeight: FontWeight.w700)),
+                Text(widget.enfantNom,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
+            ),
           ),
+          // Bouton partager PDF
+          if (_mesures.isNotEmpty)
+            GestureDetector(
+              onTap: () => _partager(context),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF9B59B6), Color(0xFFAD7EC1)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.share_rounded, color: Colors.white, size: 18),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _partager(BuildContext context) async {
+    try {
+      await CroissancePdfService.partagerCourbes(
+        enfantNom: widget.enfantNom,
+        enfantAge: widget.enfantAge,
+        enfantSexe: widget.enfantSexe,
+        mesures: _mesures,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du partage : $e'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildLastMesure() {

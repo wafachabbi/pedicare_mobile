@@ -18,6 +18,38 @@ class RendezVousService {
     }
   }
 
+  static Future<List<RendezVousModel>> getRendezVousPediatre(String pediatreId) async {
+    try {
+      final res = await http.get(
+        Uri.parse('${ApiConfig.rendezvous}?pediatre_id=$pediatreId'),
+      );
+      if (res.statusCode != 200) return [];
+      final data = jsonDecode(res.body);
+      final list = data['rendezvous'] as List;
+      // utilise _normalize comme pour getRendezVous
+      return list.map((e) => RendezVousModel.fromMap(_normalizePediatre(e))).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Map<String, dynamic> _normalizePediatre(Map<String, dynamic> e) => {
+    'id':               e['id'].toString(),
+    'titre':            e['titre'] ?? '',
+    'medecin':          e['medecin'] ?? '',
+    'specialite':       e['specialite'] ?? '',
+    'lieu':             e['lieu'] ?? '',
+    'dateHeure':        e['date_heure'] ?? '',
+    'statut':           e['statut'] ?? 'enAttente',
+    'enfantId':         e['enfant_id'].toString(),
+    'notes':            e['notes'] ?? '',
+    'type':             e['type'] ?? 'presentiel',
+    'pediatreId':       e['pediatre_id']?.toString(),
+    'enfant_prenom':    e['enfant_prenom'],
+    'enfant_nom':       e['enfant_nom'],
+    'parent_nom':       e['parent_nom'],
+  };
+
   static Future<void> addRendezVous(RendezVousModel rdv) async {
     await http.post(
       Uri.parse(ApiConfig.rendezvous),

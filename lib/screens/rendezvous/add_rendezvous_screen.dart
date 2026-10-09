@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/rendezvous_model.dart';
+import '../../models/pediatre_model.dart';
 import '../../services/rendezvous_service.dart';
+import '../../services/pediatre_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/glass_text_field.dart';
 import '../../widgets/gradient_button.dart';
@@ -26,6 +28,10 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
   String _type = 'presentiel';
   bool _loading = false;
 
+  List<PediatreModel> _pediatres = [];
+  PediatreModel? _selectedPediatre;
+  bool _loadingPediatres = true;
+
   final List<String> _specialites = [
     'Pédiatre', 'Généraliste', 'Ophtalmologue', 'Dentiste',
     'ORL', 'Dermatologue', 'Orthopédiste', 'Neurologue', 'Cardiologue',
@@ -34,6 +40,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
   @override
   void initState() {
     super.initState();
+    _loadPediatres();
     if (widget.rdv != null) {
       _titreController.text = widget.rdv!.titre;
       _medecinController.text = widget.rdv!.medecin;
@@ -42,6 +49,23 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
       _notesController.text = widget.rdv!.notes;
       _dateHeure = widget.rdv!.dateHeure;
       _type = widget.rdv!.type;
+    }
+  }
+
+  Future<void> _loadPediatres() async {
+    final list = await PediatreService.getPediatres();
+    if (mounted) {
+      setState(() {
+        _pediatres = list;
+        _loadingPediatres = false;
+        // Pré-sélectionner si édition
+        if (widget.rdv?.pediatreId != null) {
+          _selectedPediatre = list.firstWhere(
+            (p) => p.id == widget.rdv!.pediatreId,
+            orElse: () => list.isNotEmpty ? list.first : PediatreModel(id: '', name: '', email: ''),
+          );
+        }
+      });
     }
   }
 
@@ -94,7 +118,8 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
   }
 
   Future<void> _save() async {
-    if (_titreController.text.isEmpty || _medecinController.text.isEmpty) {
+    if (_titreController.text.isEmpty ||
+        (_selectedPediatre == null && _medecinController.text.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Titre et médecin obligatoires.'),
@@ -110,7 +135,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
     final rdv = RendezVousModel(
       id: widget.rdv?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       titre: _titreController.text.trim(),
-      medecin: _medecinController.text.trim(),
+      medecin: _selectedPediatre?.name ?? _medecinController.text.trim(),
       specialite: _specialiteController.text.trim(),
       lieu: _lieuController.text.trim(),
       dateHeure: _dateHeure,
@@ -118,6 +143,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
       enfantId: widget.enfantId,
       notes: _notesController.text.trim(),
       type: _type,
+      pediatreId: _selectedPediatre?.id,
     );
 
     if (widget.rdv != null) {
@@ -157,19 +183,21 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
                       const SizedBox(height: 20),
                       _buildSectionLabel('Informations'),
                       const SizedBox(height: 12),
+                      _buildPediatreSelector(),
+                      const SizedBox(height: 12),
                       GlassTextField(
                         hint: 'Titre du rendez-vous *',
                         icon: Icons.title_rounded,
                         controller: _titreController,
                       ),
                       const SizedBox(height: 12),
-                      GlassTextField(
-                        hint: 'Médecin *',
-                        icon: Icons.medical_services_outlined,
-                        controller: _medecinController,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSpecialiteDropdown(),
+                      if (_selectedPediatre == null)
+                        GlassTextField(
+                          hint: 'Médecin *',
+                          icon: Icons.medical_services_outlined,
+                          controller: _medecinController,
+                        ),
+                      if (_selectedPediatre == null) const SizedBox(height: 12),
                       const SizedBox(height: 20),
                       _buildSectionLabel('Date et heure'),
                       const SizedBox(height: 12),
@@ -333,6 +361,153 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
             color: AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700));
+  }
+
+  Widget _buildPediatreSelector() {
+    if (_loadingPediatres) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.glassBorder),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(width: 16, height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondary)),
+            SizedBox(width: 12),
+            Text('Chargement des pédiatres...',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          ],
+        ),
+      );
+    }
+
+    if (_pediatres.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.glassBorder),
+        ),
+        child: const Row(
+          children: [
+            Text('👨‍⚕️', style: TextStyle(fontSize: 18)),
+            SizedBox(width: 10),
+            Text('Aucun pédiatre disponible',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Choisir un pédiatre',
+            style: TextStyle(color: AppColors.textSecondary,
+                fontSize: 12, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        // Tuile "Sans pédiatre"
+        GestureDetector(
+          onTap: () => setState(() => _selectedPediatre = null),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: _selectedPediatre == null
+                  ? AppColors.primary.withOpacity(0.15)
+                  : AppColors.inputFill,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _selectedPediatre == null
+                    ? AppColors.secondary
+                    : AppColors.glassBorder,
+                width: _selectedPediatre == null ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Text('✏️', style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text('Saisir manuellement',
+                      style: TextStyle(color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500, fontSize: 13)),
+                ),
+                if (_selectedPediatre == null)
+                  const Icon(Icons.check_circle_rounded,
+                      color: AppColors.secondary, size: 18),
+              ],
+            ),
+          ),
+        ),
+        // Liste des pédiatres
+        ..._pediatres.map((p) {
+          final selected = _selectedPediatre?.id == p.id;
+          return GestureDetector(
+            onTap: () => setState(() {
+              _selectedPediatre = p;
+              // Auto-remplir le titre si vide
+              if (_titreController.text.isEmpty) {
+                _titreController.text = 'Consultation pédiatrique';
+              }
+            }),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: selected
+                    ? const Color(0xFF00C9A7).withOpacity(0.1)
+                    : AppColors.inputFill,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected
+                      ? const Color(0xFF00C9A7)
+                      : AppColors.glassBorder,
+                  width: selected ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00C9A7).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                        child: Text('👨‍⚕️', style: TextStyle(fontSize: 20))),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Dr. ${p.name}',
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700, fontSize: 14)),
+                        Text(p.email,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  if (selected)
+                    const Icon(Icons.check_circle_rounded,
+                        color: Color(0xFF00C9A7), size: 20),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
   }
 }
 

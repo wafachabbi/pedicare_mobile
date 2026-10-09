@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/vaccin_model.dart';
 import '../../services/vaccin_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_vaccin_screen.dart';
 import 'vaccin_detail_screen.dart';
@@ -50,6 +51,9 @@ class _VaccinationScreenState extends State<VaccinationScreen>
         _echeances = echeances;
         _loading = false;
       });
+      // Planifier les rappels pour les échéances à venir
+      await NotificationService.planifierRappelsVaccins(
+          echeances, widget.enfantNom);
     }
   }
 
@@ -69,7 +73,6 @@ class _VaccinationScreenState extends State<VaccinationScreen>
             children: [
               _buildHeader(context),
               _buildStats(),
-              _buildRDVButton(context),
               const SizedBox(height: 8),
               _buildTabBar(),
               Expanded(

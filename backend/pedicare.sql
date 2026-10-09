@@ -11,22 +11,25 @@ CREATE TABLE IF NOT EXISTS users (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   name        VARCHAR(100)  NOT NULL,
   email       VARCHAR(150)  NOT NULL UNIQUE,
-  password    VARCHAR(255)  NOT NULL,  -- bcrypt hash
+  password    VARCHAR(255)  NOT NULL,
   role        ENUM('parent','pediatre') NOT NULL DEFAULT 'parent',
+  specialite  VARCHAR(100) DEFAULT NULL,
+  telephone   VARCHAR(20)  DEFAULT NULL,
+  adresse     VARCHAR(200) DEFAULT NULL,
   created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── Enfants ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS enfants (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  parent_id   INT NOT NULL,
-  nom         VARCHAR(100) NOT NULL,
-  prenom      VARCHAR(100) NOT NULL,
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  parent_id      INT NOT NULL,
+  nom            VARCHAR(100) NOT NULL,
+  prenom         VARCHAR(100) NOT NULL,
   date_naissance DATE NOT NULL,
-  sexe        ENUM('M','F') NOT NULL,
+  sexe           ENUM('M','F') NOT NULL,
   groupe_sanguin VARCHAR(5),
-  allergies   TEXT,
-  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  allergies      TEXT,
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -48,18 +51,20 @@ CREATE TABLE IF NOT EXISTS vaccins (
 
 -- ── Rendez-vous ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS rendezvous (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  enfant_id   INT NOT NULL,
-  titre       VARCHAR(200) NOT NULL,
-  medecin     VARCHAR(100),
-  specialite  VARCHAR(100),
-  lieu        VARCHAR(150),
-  date_heure  DATETIME NOT NULL,
-  statut      ENUM('confirme','enAttente','annule','termine') DEFAULT 'enAttente',
-  type        VARCHAR(50) DEFAULT 'presentiel',
-  notes       TEXT,
-  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  enfant_id     INT NOT NULL,
+  pediatre_id   INT DEFAULT NULL,
+  titre         VARCHAR(200) NOT NULL,
+  medecin       VARCHAR(100),
+  specialite    VARCHAR(100),
+  lieu          VARCHAR(150),
+  date_heure    DATETIME NOT NULL,
+  statut        ENUM('confirme','enAttente','annule','termine') DEFAULT 'enAttente',
+  type          VARCHAR(50) DEFAULT 'presentiel',
+  notes         TEXT,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (enfant_id)   REFERENCES enfants(id) ON DELETE CASCADE,
+  FOREIGN KEY (pediatre_id) REFERENCES users(id)   ON DELETE SET NULL
 );
 
 -- ── Croissance ──────────────────────────────────────────────

@@ -6,7 +6,9 @@ class ApiConfig {
 
   static const String signup      = '$baseUrl/auth/signup.php';
   static const String login       = '$baseUrl/auth/login.php';
+  static const String enfants     = '$baseUrl/enfants/index.php';
   static const String vaccins     = '$baseUrl/vaccins/index.php';
   static const String rendezvous  = '$baseUrl/rendezvous/index.php';
   static const String croissance  = '$baseUrl/croissance/index.php';
+  static const String pediatres   = '$baseUrl/pediatres/index.php';
 }
