@@ -76,12 +76,10 @@ class CroissancePdfService {
     await file.writeAsBytes(await pdf.save());
 
     // Partager
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path, mimeType: 'application/pdf')],
-        subject: 'Courbes de croissance — $enfantNom',
-        text: 'Veuillez trouver ci-joint le suivi de croissance de $enfantNom.',
-      ),
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'application/pdf')],
+      subject: 'Courbes de croissance — $enfantNom',
+      text: 'Veuillez trouver ci-joint le suivi de croissance de $enfantNom.',
     );
   }
 
@@ -108,7 +106,7 @@ class CroissancePdfService {
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold)),
               pw.Text('Suivi de croissance pédiatrique',
-                  style: pw.TextStyle(color: PdfColors.white70, fontSize: 11)),
+                  style: pw.TextStyle(color: PdfColors.grey300, fontSize: 11)),
             ],
           ),
           pw.Column(
@@ -120,7 +118,7 @@ class CroissancePdfService {
                       fontSize: 14,
                       fontWeight: pw.FontWeight.bold)),
               pw.Text('$age — ${sexe == "F" ? "Fille" : "Garçon"}',
-                  style: pw.TextStyle(color: PdfColors.white70, fontSize: 11)),
+                  style: pw.TextStyle(color: PdfColors.grey300, fontSize: 11)),
             ],
           ),
         ],
