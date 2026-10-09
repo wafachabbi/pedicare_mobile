@@ -135,9 +135,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
       id: widget.rdv?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       titre: _titreController.text.trim(),
       medecin: _selectedPediatre?.name ?? _medecinController.text.trim(),
-      specialite: _selectedPediatre?.specialite.isNotEmpty == true
-          ? _selectedPediatre!.specialite
-          : _specialiteController.text.trim(),
+      specialite: _specialiteController.text.trim(),
       lieu: _lieuController.text.trim(),
       dateHeure: _dateHeure,
       statut: widget.rdv?.statut ?? StatutRDV.enAttente,
@@ -495,14 +493,9 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
                             style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w700, fontSize: 14)),
-                        if (p.specialite.isNotEmpty)
-                          Text(p.specialite,
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 12)),
-                        if (p.adresse.isNotEmpty)
-                          Text(p.adresse,
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 11)),
+                        Text(p.email,
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
                       ],
                     ),
                   ),
