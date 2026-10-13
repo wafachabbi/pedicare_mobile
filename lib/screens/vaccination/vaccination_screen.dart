@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../models/vaccin_model.dart';
+import '../../models/enfant_model.dart';
 import '../../services/vaccin_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_vaccin_screen.dart';
 import 'vaccin_detail_screen.dart';
+import 'calendrier_vaccinal_screen.dart';
 import '../rendezvous/rendezvous_screen.dart';
 
 class VaccinationScreen extends StatefulWidget {
   final String enfantId;
   final String enfantNom;
+  final EnfantModel? enfant; // optionnel pour le calendrier vaccinal
 
   const VaccinationScreen({
     super.key,
     required this.enfantId,
     required this.enfantNom,
+    this.enfant,
   });
 
   @override
@@ -127,6 +131,27 @@ class _VaccinationScreenState extends State<VaccinationScreen>
                       color: AppColors.textSecondary, fontSize: 13)),
             ],
           ),
+          const Spacer(),
+          if (widget.enfant != null)
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CalendrierVaccinalScreen(
+                      enfant: widget.enfant!),
+                ),
+              ),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF00855A), Color(0xFF00C9A7)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.fact_check_outlined,
+                    color: Colors.white, size: 18),
+              ),
+            ),
         ],
       ),
     );
