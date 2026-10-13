@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/rendezvous_model.dart';
 import 'api_config.dart';
@@ -9,11 +10,13 @@ class RendezVousService {
       final res = await http.get(
         Uri.parse('${ApiConfig.rendezvous}?enfant_id=$enfantId'),
       );
+      debugPrint('[RDV] GET status: ${res.statusCode} | body: ${res.body}');
       if (res.statusCode != 200) return [];
       final data = jsonDecode(res.body);
       final list = data['rendezvous'] as List;
       return list.map((e) => RendezVousModel.fromMap(_normalize(e))).toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[RDV] GET error: $e');
       return [];
     }
   }
@@ -50,12 +53,21 @@ class RendezVousService {
     'parent_nom':       e['parent_nom'],
   };
 
-  static Future<void> addRendezVous(RendezVousModel rdv) async {
-    await http.post(
-      Uri.parse(ApiConfig.rendezvous),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(rdv.toMap()),
-    );
+  static Future<bool> addRendezVous(RendezVousModel rdv) async {
+    try {
+      final body = jsonEncode(rdv.toMap());
+      debugPrint('[RDV] POST body: $body');
+      final res = await http.post(
+        Uri.parse(ApiConfig.rendezvous),
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+      debugPrint('[RDV] POST status: ${res.statusCode} | body: ${res.body}');
+      return res.statusCode == 200 || res.statusCode == 201;
+    } catch (e) {
+      debugPrint('[RDV] POST error: $e');
+      return false;
+    }
   }
 
   static Future<void> updateRendezVous(RendezVousModel rdv) async {
@@ -79,14 +91,14 @@ class RendezVousService {
   }
 
   static Map<String, dynamic> _normalize(Map<String, dynamic> e) => {
-    'id':         e['id'].toString(),
+    'id':         e['id']?.toString() ?? '',
     'titre':      e['titre'] ?? '',
     'medecin':    e['medecin'] ?? '',
     'specialite': e['specialite'] ?? '',
     'lieu':       e['lieu'] ?? '',
     'dateHeure':  e['date_heure'] ?? '',
     'statut':     e['statut'] ?? 'enAttente',
-    'enfantId':   e['enfant_id'].toString(),
+    'enfantId':   e['enfant_id']?.toString() ?? '',
     'notes':      e['notes'] ?? '',
     'type':       e['type'] ?? 'presentiel',
   };

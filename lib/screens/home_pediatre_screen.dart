@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/rendezvous_service.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
+import 'rendezvous/calendrier_pediatre_screen.dart';
 
 class HomePediatreScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -125,6 +126,17 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
         ]),
         Row(children: [
           _iconBtn(Icons.refresh_rounded, onTap: _loadRDVs),
+          const SizedBox(width: 10),
+          _iconBtn(Icons.calendar_month_rounded, onTap: () {
+            final id = (widget.user['id'] ?? widget.user['uid'] ?? '').toString();
+            final name = widget.user['name'] ?? 'Docteur';
+            Navigator.push(context, MaterialPageRoute(
+              builder: (_) => CalendrierPediatreScreen(
+                pediatreId: id,
+                pediatreNom: name,
+              ),
+            ));
+          }),
           const SizedBox(width: 10),
           GestureDetector(
             onTap: () => _logout(context),

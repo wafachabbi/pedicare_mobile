@@ -4,6 +4,7 @@ import '../../services/rendezvous_service.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_rendezvous_screen.dart';
+import 'calendrier_rdv_screen.dart';
 
 class RendezVousScreen extends StatefulWidget {
   final String enfantId;
@@ -133,6 +134,28 @@ class _RendezVousScreenState extends State<RendezVousScreen>
               Text(widget.enfantNom,
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
             ],
+          ),
+          const Spacer(),
+          // Bouton vue calendrier
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CalendrierRdvScreen(
+                  enfantId: widget.enfantId,
+                  enfantNom: widget.enfantNom,
+                ),
+              ),
+            ),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: AppColors.buttonGradient),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.calendar_month_rounded,
+                  color: Colors.white, size: 18),
+            ),
           ),
         ],
       ),

@@ -32,13 +32,18 @@ class RendezVousModel {
   });
 
   Map<String, dynamic> toMap() {
+    // MySQL attend 'YYYY-MM-DD HH:MM:SS'
+    String _fmtMysql(DateTime d) =>
+        '${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')} '
+        '${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}:${d.second.toString().padLeft(2,'0')}';
+
     return {
       'id': id,
       'titre': titre,
       'medecin': medecin,
       'specialite': specialite,
       'lieu': lieu,
-      'dateHeure': dateHeure.toIso8601String(),
+      'dateHeure': _fmtMysql(dateHeure),
       'statut': statut.name,
       'enfantId': enfantId,
       'notes': notes,
@@ -56,7 +61,7 @@ class RendezVousModel {
     }
 
     return RendezVousModel(
-      id: map['id'].toString(),
+      id: map['id']?.toString() ?? '',
       titre: map['titre'] ?? '',
       medecin: map['medecin'] ?? '',
       specialite: map['specialite'] ?? '',
