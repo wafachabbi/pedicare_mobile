@@ -166,7 +166,6 @@ class CroissancePdfService {
         decoration: pw.BoxDecoration(
           color: PdfColor.fromInt(
               color.toInt() & 0xFFFFFF | 0x20000000),
-          borderRadius: pw.BorderRadius.circular(8),
           border: pw.Border.all(color: color, width: 1),
         ),
         child: pw.Column(
@@ -189,7 +188,6 @@ class CroissancePdfService {
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       decoration: pw.BoxDecoration(
         color: PdfColor.fromInt(color.toInt() & 0xFFFFFF | 0x15000000),
-        borderRadius: pw.BorderRadius.circular(4),
         border: pw.Border(left: pw.BorderSide(color: color, width: 3)),
       ),
       child: pw.Text(title,
@@ -310,7 +308,6 @@ class CroissancePdfService {
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         color: PdfColors.grey100,
-        borderRadius: pw.BorderRadius.circular(6),
         border: pw.Border.all(color: PdfColors.grey300),
       ),
       child: pw.Text(
