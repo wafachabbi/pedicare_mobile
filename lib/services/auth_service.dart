@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api_config.dart';
+import 'database_service.dart';
 
 class AuthService {
   static const _userKey = 'logged_user';
@@ -14,16 +13,21 @@ class AuthService {
     required String role,
   }) async {
     try {
-      final res = await http.post(
-        Uri.parse(ApiConfig.signup),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': name, 'email': email, 'password': password, 'role': role}),
-      );
-      final data = jsonDecode(res.body);
-      if (res.statusCode == 201) return null;
-      return data['error'] ?? 'Erreur lors de l\'inscription.';
+      final db = await DatabaseService.database;
+
+      // Vérifier doublon email
+      final existing = await db.query('users', where: 'email = ?', whereArgs: [email]);
+      if (existing.isNotEmpty) return 'Un compte avec cet email existe déjà.';
+
+      await db.insert('users', {
+        'name': name,
+        'email': email.trim(),
+        'password': password, // En prod, utiliser un hash (bcrypt non dispo nativement)
+        'role': role,
+      });
+      return null; // pas d'erreur
     } catch (_) {
-      return 'Impossible de contacter le serveur.';
+      return 'Erreur lors de l\'inscription.';
     }
   }
 
@@ -33,15 +37,17 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final res = await http.post(
-        Uri.parse(ApiConfig.login),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+      final db = await DatabaseService.database;
+      final rows = await db.query(
+        'users',
+        where: 'email = ? AND password = ?',
+        whereArgs: [email.trim(), password],
       );
-      if (res.statusCode != 200) return null;
-      final data = jsonDecode(res.body);
-      final user = data['user'] as Map<String, dynamic>;
-      // Persister la session localement
+      if (rows.isEmpty) return null;
+
+      final user = Map<String, dynamic>.from(rows.first);
+      user.remove('password'); // ne jamais stocker le mot de passe en session
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_userKey, jsonEncode(user));
       return user;

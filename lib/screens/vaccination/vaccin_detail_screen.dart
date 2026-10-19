@@ -81,13 +81,17 @@ class VaccinDetailScreen extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.w700)),
           GestureDetector(
-            onTap: () => Navigator.push(
+            onTap: () async {
+              await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => AddVaccinScreen(
                     enfantId: vaccin.enfantId, vaccin: vaccin),
               ),
-            ),
+            );
+            // Rafraîchir après modification
+            if (context.mounted) Navigator.pop(context, true);
+            },
             child: Container(
               width: 40,
               height: 40,
