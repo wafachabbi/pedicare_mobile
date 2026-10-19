@@ -12,11 +12,12 @@ if ($method === 'GET') {
     // Liste par pédiatre (espace pédiatre)
     if ($pediatre_id) {
         $stmt = $db->prepare('
-            SELECT r.*, e.prenom AS enfant_prenom, e.nom AS enfant_nom,
-                   u.name AS parent_nom
+            SELECT r.*,
+                   e.prenom AS enfant_prenom, e.nom AS enfant_nom,
+                   u.name   AS parent_nom
             FROM rendezvous r
-            JOIN enfants e ON e.id = r.enfant_id
-            JOIN users   u ON u.id = e.parent_id
+            LEFT JOIN enfants e ON e.id = r.enfant_id
+            LEFT JOIN users   u ON u.id = e.parent_id
             WHERE r.pediatre_id = ?
             ORDER BY r.date_heure ASC
         ');
@@ -26,15 +27,18 @@ if ($method === 'GET') {
 
     // Liste par enfant (espace parent)
     if ($enfant_id) {
-        $stmt = $db->prepare('
-            SELECT r.*, u.name AS pediatre_nom, u.specialite AS pediatre_specialite
-            FROM rendezvous r
-            LEFT JOIN users u ON u.id = r.pediatre_id
-            WHERE r.enfant_id = ?
-            ORDER BY r.date_heure ASC
-        ');
-        $stmt->execute([$enfant_id]);
-        json_response(['rendezvous' => $stmt->fetchAll()]);
+        try {
+            $stmt = $db->prepare('
+                SELECT r.*
+                FROM rendezvous r
+                WHERE r.enfant_id = ?
+                ORDER BY r.date_heure ASC
+            ');
+            $stmt->execute([$enfant_id]);
+            json_response(['rendezvous' => $stmt->fetchAll()]);
+        } catch (Exception $e) {
+            json_response(['error' => $e->getMessage(), 'rendezvous' => []], 500);
+        }
     }
 
     json_response(['error' => 'enfant_id ou pediatre_id requis.'], 400);

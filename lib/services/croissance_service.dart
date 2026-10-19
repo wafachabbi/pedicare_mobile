@@ -1,41 +1,53 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/croissance_model.dart';
-import 'api_config.dart';
+import 'database_service.dart';
 
 class CroissanceService {
   static Future<List<CroissanceModel>> getMesures(String enfantId) async {
     try {
-      final res = await http.get(
-        Uri.parse('${ApiConfig.croissance}?enfant_id=$enfantId'),
+      final db = await DatabaseService.database;
+      final rows = await db.query(
+        'croissance',
+        where: 'enfant_id = ?',
+        whereArgs: [int.parse(enfantId)],
+        orderBy: 'date_mesure DESC',
       );
-      if (res.statusCode != 200) return [];
-      final data = jsonDecode(res.body);
-      final list = data['mesures'] as List;
-      return list.map((e) => CroissanceModel.fromMap(_normalize(e))).toList();
+      return rows.map((e) => CroissanceModel.fromMap(_normalize(e))).toList();
     } catch (_) {
       return [];
     }
   }
 
   static Future<void> addMesure(CroissanceModel mesure) async {
-    await http.post(
-      Uri.parse(ApiConfig.croissance),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(mesure.toMap()),
-    );
+    final db = await DatabaseService.database;
+    await db.insert('croissance', {
+      'enfant_id':         int.parse(mesure.enfantId),
+      'date_mesure':       mesure.date.toIso8601String().split('T')[0],
+      'poids':             mesure.poids,
+      'taille':            mesure.taille,
+      'perimetre_cranien': mesure.perimeterCranien,
+      'notes':             mesure.notes,
+    });
   }
 
   static Future<void> updateMesure(CroissanceModel mesure) async {
-    await http.put(
-      Uri.parse('${ApiConfig.croissance}?id=${mesure.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(mesure.toMap()),
+    final db = await DatabaseService.database;
+    await db.update(
+      'croissance',
+      {
+        'date_mesure':       mesure.date.toIso8601String().split('T')[0],
+        'poids':             mesure.poids,
+        'taille':            mesure.taille,
+        'perimetre_cranien': mesure.perimeterCranien,
+        'notes':             mesure.notes,
+      },
+      where: 'id = ?',
+      whereArgs: [int.parse(mesure.id)],
     );
   }
 
   static Future<void> deleteMesure(String enfantId, String id) async {
-    await http.delete(Uri.parse('${ApiConfig.croissance}?id=$id'));
+    final db = await DatabaseService.database;
+    await db.delete('croissance', where: 'id = ?', whereArgs: [int.parse(id)]);
   }
 
   static Future<CroissanceModel?> getDerniereMesure(String enfantId) async {

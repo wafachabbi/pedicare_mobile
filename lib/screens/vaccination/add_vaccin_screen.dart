@@ -92,10 +92,8 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
       initialDate: isProchaine
           ? (_prochaineDate ?? DateTime.now().add(const Duration(days: 30)))
           : _dateAdministre,
-      firstDate: isProchaine ? DateTime.now() : DateTime(2000),
-      lastDate: isProchaine
-          ? DateTime.now().add(const Duration(days: 365 * 5))
-          : DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.dark(
@@ -118,10 +116,10 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
   }
 
   Future<void> _save() async {
-    if (_nomController.text.isEmpty || _selectedPediatre == null) {
+    if (_nomController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Nom du vaccin et médecin obligatoires.'),
+          content: Text('Le nom du vaccin est obligatoire.'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
         ),
@@ -132,11 +130,11 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
     setState(() => _loading = true);
 
     final vaccin = VaccinModel(
-      id: widget.vaccin?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.vaccin?.id ?? '0',
       nom: _nomController.text.trim(),
       maladie: _maladieController.text.trim(),
       dateAdministre: _dateAdministre,
-      medecin: _selectedPediatre!.name,
+      medecin: _selectedPediatre?.name ?? widget.vaccin?.medecin ?? '',
       lieu: _lieuController.text.trim(),
       lotNumero: _lotController.text.trim(),
       prochaineDate: _prochaineDate,

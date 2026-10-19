@@ -1,41 +1,59 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/vaccin_model.dart';
-import 'api_config.dart';
+import 'database_service.dart';
 
 class VaccinService {
   static Future<List<VaccinModel>> getVaccins(String enfantId) async {
     try {
-      final res = await http.get(
-        Uri.parse('${ApiConfig.vaccins}?enfant_id=$enfantId'),
+      final db = await DatabaseService.database;
+      final rows = await db.query(
+        'vaccins',
+        where: 'enfant_id = ?',
+        whereArgs: [int.parse(enfantId)],
+        orderBy: 'date_administre DESC',
       );
-      if (res.statusCode != 200) return [];
-      final data = jsonDecode(res.body);
-      final list = data['vaccins'] as List;
-      return list.map((e) => VaccinModel.fromMap(_normalize(e))).toList();
+      return rows.map((e) => VaccinModel.fromMap(_normalize(e))).toList();
     } catch (_) {
       return [];
     }
   }
 
   static Future<void> addVaccin(VaccinModel vaccin) async {
-    await http.post(
-      Uri.parse(ApiConfig.vaccins),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(vaccin.toMap()),
-    );
+    final db = await DatabaseService.database;
+    await db.insert('vaccins', {
+      'enfant_id':       int.parse(vaccin.enfantId),
+      'nom':             vaccin.nom,
+      'maladie':         vaccin.maladie,
+      'date_administre': vaccin.dateAdministre.toIso8601String().split('T')[0],
+      'medecin':         vaccin.medecin,
+      'lieu':            vaccin.lieu,
+      'lot_numero':      vaccin.lotNumero,
+      'prochaine_date':  vaccin.prochaineDate?.toIso8601String().split('T')[0],
+      'notes':           vaccin.notes,
+    });
   }
 
   static Future<void> updateVaccin(VaccinModel vaccin) async {
-    await http.put(
-      Uri.parse('${ApiConfig.vaccins}?id=${vaccin.id}'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(vaccin.toMap()),
+    final db = await DatabaseService.database;
+    await db.update(
+      'vaccins',
+      {
+        'nom':             vaccin.nom,
+        'maladie':         vaccin.maladie,
+        'date_administre': vaccin.dateAdministre.toIso8601String().split('T')[0],
+        'medecin':         vaccin.medecin,
+        'lieu':            vaccin.lieu,
+        'lot_numero':      vaccin.lotNumero,
+        'prochaine_date':  vaccin.prochaineDate?.toIso8601String().split('T')[0],
+        'notes':           vaccin.notes,
+      },
+      where: 'id = ?',
+      whereArgs: [int.parse(vaccin.id)],
     );
   }
 
   static Future<void> deleteVaccin(String enfantId, String id) async {
-    await http.delete(Uri.parse('${ApiConfig.vaccins}?id=$id'));
+    final db = await DatabaseService.database;
+    await db.delete('vaccins', where: 'id = ?', whereArgs: [int.parse(id)]);
   }
 
   static Future<List<VaccinModel>> getProchainesEcheances(String enfantId) async {
@@ -47,7 +65,6 @@ class VaccinService {
       ..sort((a, b) => a.prochaineDate!.compareTo(b.prochaineDate!));
   }
 
-  // MySQL retourne des noms snake_case — mapper vers camelCase attendu par le model
   static Map<String, dynamic> _normalize(Map<String, dynamic> e) => {
     'id':             e['id'].toString(),
     'nom':            e['nom'] ?? '',

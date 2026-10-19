@@ -251,7 +251,10 @@ class _EnfantsScreenState extends State<EnfantsScreen> {
                 color: const Color(0xFF00C9A7),
                 onTap: () => Navigator.push(context, MaterialPageRoute(
                   builder: (_) => VaccinationScreen(
-                    enfantId: enfant.id, enfantNom: enfant.nomComplet),
+                    enfantId: enfant.id,
+                    enfantNom: enfant.nomComplet,
+                    enfant: enfant,
+                  ),
                 )),
               ),
               _ModuleCard(

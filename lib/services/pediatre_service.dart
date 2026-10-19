@@ -1,17 +1,22 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:developer' as dev;
 import '../models/pediatre_model.dart';
-import 'api_config.dart';
+import 'database_service.dart';
 
 class PediatreService {
   static Future<List<PediatreModel>> getPediatres() async {
     try {
-      final res = await http.get(Uri.parse(ApiConfig.pediatres));
-      if (res.statusCode != 200) return [];
-      final data = jsonDecode(res.body);
-      final list = data['pediatres'] as List;
-      return list.map((e) => PediatreModel.fromMap(e)).toList();
-    } catch (_) {
+      final db = await DatabaseService.database;
+      final rows = await db.query(
+        'users',
+        columns: ['id', 'name', 'email'],
+        where: 'role = ?',
+        whereArgs: ['pediatre'],
+        orderBy: 'name ASC',
+      );
+      dev.log('PediatreService: ${rows.length} pédiatres trouvés');
+      return rows.map((e) => PediatreModel.fromMap(e)).toList();
+    } catch (e) {
+      dev.log('PediatreService ERROR: $e');
       return [];
     }
   }

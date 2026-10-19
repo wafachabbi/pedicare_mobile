@@ -10,8 +10,14 @@ import '../../widgets/gradient_button.dart';
 class AddRendezVousScreen extends StatefulWidget {
   final String enfantId;
   final RendezVousModel? rdv;
+  final DateTime? initialDate;
 
-  const AddRendezVousScreen({super.key, required this.enfantId, this.rdv});
+  const AddRendezVousScreen({
+    super.key,
+    required this.enfantId,
+    this.rdv,
+    this.initialDate,
+  });
 
   @override
   State<AddRendezVousScreen> createState() => _AddRendezVousScreenState();
@@ -49,6 +55,10 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
       _notesController.text = widget.rdv!.notes;
       _dateHeure = widget.rdv!.dateHeure;
       _type = widget.rdv!.type;
+    } else if (widget.initialDate != null) {
+      // Pré-remplir avec la date sélectionnée dans le calendrier
+      final d = widget.initialDate!;
+      _dateHeure = DateTime(d.year, d.month, d.day, 9, 0);
     }
   }
 
@@ -149,7 +159,18 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
     if (widget.rdv != null) {
       await RendezVousService.updateRendezVous(rdv);
     } else {
-      await RendezVousService.addRendezVous(rdv);
+      final ok = await RendezVousService.addRendezVous(rdv);
+      if (!ok && mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'ajout. Vérifiez la connexion au serveur.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
     }
 
     if (mounted) {
