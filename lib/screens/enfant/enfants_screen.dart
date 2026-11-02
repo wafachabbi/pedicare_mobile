@@ -274,7 +274,11 @@ class _EnfantsScreenState extends State<EnfantsScreen> {
                 color: const Color(0xFF9B59B6),
                 onTap: () => Navigator.push(context, MaterialPageRoute(
                   builder: (_) => CroissanceScreen(
-                    enfantId: enfant.id, enfantNom: enfant.nomComplet),
+                    enfantId: enfant.id, enfantNom: enfant.nomComplet,
+                    enfantSexe: enfant.sexe,
+                    enfantAge: '${enfant.age} ans',
+                    dateNaissance: enfant.dateNaissance,
+                  ),
                 )),
               ),
               _ModuleCard(

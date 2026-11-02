@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import '../../models/croissance_model.dart';
 import '../../services/croissance_service.dart';
 import '../../services/croissance_pdf_service.dart';
+import '../../services/percentile_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_mesure_screen.dart';
+import 'courbes_croissance_screen.dart';
 
 class CroissanceScreen extends StatefulWidget {
   final String enfantId;
   final String enfantNom;
   final String enfantSexe;
   final String enfantAge;
+  final DateTime? dateNaissance;
 
   const CroissanceScreen({
     super.key,
@@ -17,6 +20,7 @@ class CroissanceScreen extends StatefulWidget {
     required this.enfantNom,
     this.enfantSexe = 'M',
     this.enfantAge = '',
+    this.dateNaissance,
   });
 
   @override
@@ -25,6 +29,7 @@ class CroissanceScreen extends StatefulWidget {
 
 class _CroissanceScreenState extends State<CroissanceScreen> {
   List<CroissanceModel> _mesures = [];
+  List<AlerteCroissance> _alertes = [];
   bool _loading = true;
 
   @override
@@ -36,7 +41,10 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     final mesures = await CroissanceService.getMesures(widget.enfantId);
-    if (mounted) setState(() { _mesures = mesures; _loading = false; });
+    final alertes = mesures.length >= 2
+        ? PercentileService.detecterAnomalies(mesures: mesures, sexe: widget.enfantSexe)
+        : <AlerteCroissance>[];
+    if (mounted) setState(() { _mesures = mesures; _alertes = alertes; _loading = false; });
   }
 
   @override
@@ -55,6 +63,7 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
             children: [
               _buildHeader(context),
               if (!_loading && _mesures.isNotEmpty) _buildLastMesure(),
+              if (!_loading && _alertes.isNotEmpty) _buildAlertes(),
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator(color: AppColors.secondary))
@@ -101,6 +110,28 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
               ],
             ),
           ),
+          // Bouton courbes interactives
+          if (_mesures.isNotEmpty)
+            GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => CourbesCroissanceScreen(
+                  mesures: _mesures,
+                  enfantNom: widget.enfantNom,
+                  sexe: widget.enfantSexe,
+                  dateNaissance: widget.dateNaissance ?? DateTime.now().subtract(const Duration(days: 365)),
+                ),
+              )),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B59B6).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF9B59B6).withOpacity(0.4)),
+                ),
+                child: const Icon(Icons.show_chart_rounded, color: Color(0xFF9B59B6), size: 18),
+              ),
+            ),
+          const SizedBox(width: 8),
           // Bouton partager PDF
           if (_mesures.isNotEmpty)
             GestureDetector(
@@ -140,8 +171,61 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
     }
   }
 
-  Widget _buildLastMesure() {
-    final m = _mesures.first;
+  Widget _buildAlertes() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('⚠️', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Text(
+                '${_alertes.length} alerte${_alertes.length > 1 ? 's' : ''} détectée${_alertes.length > 1 ? 's' : ''}',
+                style: const TextStyle(
+                    color: AppColors.danger, fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ..._alertes.take(2).map((a) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  a.gravite == GraviteAlerte.elevee
+                      ? Icons.error_outline_rounded
+                      : Icons.warning_amber_rounded,
+                  color: a.gravite == GraviteAlerte.elevee
+                      ? AppColors.danger
+                      : const Color(0xFFE67E22),
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(a.message,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                ),
+              ],
+            ),
+          )),
+          if (_alertes.length > 2)
+            Text('+ ${_alertes.length - 2} autre(s)...',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastMesure() {    final m = _mesures.first;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
