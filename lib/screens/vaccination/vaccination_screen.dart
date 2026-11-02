@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import 'add_vaccin_screen.dart';
 import 'vaccin_detail_screen.dart';
 import 'calendrier_vaccinal_screen.dart';
+import 'ia_vaccination_screen.dart';
 import '../rendezvous/rendezvous_screen.dart';
 
 class VaccinationScreen extends StatefulWidget {
@@ -132,6 +133,25 @@ class _VaccinationScreenState extends State<VaccinationScreen>
             ],
           ),
           const Spacer(),
+          // Bouton IA
+          if (widget.enfant != null)
+            GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => IAVaccinationScreen(enfant: widget.enfant!),
+              )),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF6C3DE8), Color(0xFF9B59B6)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text('🤖', style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ),
+          const SizedBox(width: 8),
           if (widget.enfant != null)
             GestureDetector(
               onTap: () => Navigator.push(
