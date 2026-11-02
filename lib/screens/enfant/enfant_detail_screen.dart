@@ -181,6 +181,7 @@ class EnfantDetailScreen extends StatelessWidget {
                           enfantNom: enfant.nomComplet,
                           enfantSexe: enfant.sexe,
                           enfantAge: '${enfant.age} ans',
+                          dateNaissance: enfant.dateNaissance,
                         ),
                       )),
                     ),
