@@ -6,6 +6,7 @@ import '../../services/percentile_service.dart';
 import '../../theme/app_colors.dart';
 import 'add_mesure_screen.dart';
 import 'courbes_croissance_screen.dart';
+import 'ia_croissance_screen.dart';
 
 class CroissanceScreen extends StatefulWidget {
   final String enfantId;
@@ -110,6 +111,30 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
               ],
             ),
           ),
+          // Bouton IA analyse croissance
+          if (_mesures.isNotEmpty)
+            GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => IACroissanceScreen(
+                  mesures: _mesures,
+                  enfantNom: widget.enfantNom,
+                  sexe: widget.enfantSexe,
+                  dateNaissance: widget.dateNaissance ?? DateTime.now().subtract(const Duration(days: 365)),
+                ),
+              )),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF4285F4), Color(0xFF0F9D58)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text('🤖', style: TextStyle(fontSize: 18)),
+                ),
+              ),
+            ),
+          const SizedBox(width: 8),
           // Bouton courbes interactives
           if (_mesures.isNotEmpty)
             GestureDetector(
