@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../croissance/croissance_screen.dart';
 import '../vaccination/vaccination_screen.dart';
 import '../rendezvous/rendezvous_screen.dart';
+import '../eveil/eveil_screen.dart';
 
 class EnfantDetailScreen extends StatelessWidget {
   final EnfantModel enfant;
@@ -167,7 +168,7 @@ class EnfantDetailScreen extends StatelessWidget {
                       color: const Color(0xFF1E6FDB),
                       onTap: () => Navigator.push(context, MaterialPageRoute(
                         builder: (_) => RendezVousScreen(
-                          enfantId: enfant.id, enfantNom: enfant.nomComplet),
+                            enfantId: enfant.id, enfantNom: enfant.nomComplet),
                       )),
                     ),
                     _ModuleCard(
@@ -197,6 +198,16 @@ class EnfantDetailScreen extends StatelessWidget {
                           behavior: SnackBarBehavior.floating,
                         ),
                       ),
+                    ),
+                    // ── Module Éveil & Jeux (Arij) ──
+                    _ModuleCard(
+                      emoji: '🎨',
+                      title: 'Éveil & Jeux',
+                      subtitle: 'Apprendre en jouant',
+                      color: const Color(0xFFFF8A00),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => EveilScreen(enfant: enfant),
+                      )),
                     ),
                   ],
                 ),
