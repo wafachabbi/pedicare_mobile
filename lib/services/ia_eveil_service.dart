@@ -1,4 +1,4 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'groq_service.dart';
 import '../models/activite_model.dart';
 import '../models/enfant_model.dart';
 import 'database_service.dart';
@@ -54,10 +54,6 @@ class BilanEveil {
 }
 
 class IAEveilService {
-  // La clé n'est JAMAIS écrite dans le code : elle est passée au lancement
-  // avec --dart-define=GEMINI_API_KEY=xxxx
-  static const String _apiKey = String.fromEnvironment('GEMINI_API_KEY');
-
   static const Map<String, String> _labels = {
     'langage': 'Langage',
     'memoire': 'Mémoire',
@@ -165,17 +161,11 @@ class IAEveilService {
       List<DomaineBilan> domaines,
       int totalSeances,
       ) async {
-    if (_apiKey.isEmpty || totalSeances == 0) {
+    if (!GroqService.disponible || totalSeances == 0) {
       return (_fallback(enfant, ageMois, domaines, totalSeances), false);
     }
 
     try {
-      final model = GenerativeModel(
-        model: 'gemini-3.8-flash',
-        apiKey: _apiKey,
-        generationConfig: GenerationConfig(temperature: 0.6, maxOutputTokens: 1024),
-      );
-
       final il = enfant.sexe == 'F' ? 'elle' : 'il';
       final domainesStr = domaines
           .map((d) => '- ${d.label} : ${d.nbSeances} séance(s), score moyen '
@@ -204,8 +194,7 @@ Instructions :
 - Texte pur, sans markdown, sans listes
 ''';
 
-      final response = await model.generateContent([Content.text(prompt)]);
-      final text = response.text?.trim() ?? '';
+      final text = (await GroqService.generer(prompt, maxTokens: 2000)) ?? '';
       if (text.isEmpty) {
         return (_fallback(enfant, ageMois, domaines, totalSeances), false);
       }

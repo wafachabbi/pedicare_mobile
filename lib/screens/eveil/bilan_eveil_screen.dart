@@ -244,7 +244,7 @@ class _BilanEveilScreenState extends State<BilanEveilScreen> {
                     style: TextStyle(color: AppColors.textPrimary,
                         fontSize: 16, fontWeight: FontWeight.w700)),
               ),
-              Text(bilan.geminiDisponible ? 'Gemini' : 'Analyse locale',
+              Text(bilan.geminiDisponible ? 'IA · Groq' : 'Analyse locale',
                   style: const TextStyle(color: AppColors.secondary, fontSize: 11)),
             ],
           ),
