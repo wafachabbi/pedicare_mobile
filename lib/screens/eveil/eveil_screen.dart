@@ -3,6 +3,7 @@ import '../../models/activite_model.dart';
 import '../../models/enfant_model.dart';
 import '../../services/eveil_service.dart';
 import '../../theme/app_colors.dart';
+import 'association_game_screen.dart';
 
 class EveilScreen extends StatefulWidget {
   final EnfantModel enfant;
@@ -60,9 +61,17 @@ class _EveilScreenState extends State<EveilScreen> {
     });
   }
 
-  void _ouvrirActivite(ActiviteModel a) {
+  // ── Ouvrir une activité ───────────────────────────────────────────────────
+  Future<void> _ouvrirActivite(ActiviteModel a) async {
+    if (a.typeJeu == 'association') {
+      await Navigator.push(context, MaterialPageRoute(
+        builder: (_) => AssociationGameScreen(enfant: widget.enfant, activite: a),
+      ));
+      _load(); // rafraîchir les badges après la partie
+      return;
+    }
     if (a.estJeu) {
-      // Les écrans de jeux seront branchés à l'étape suivante
+      // Jeu Memory : branché à l'étape suivante
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Le jeu arrive bientôt 🎮'),
@@ -165,6 +174,7 @@ class _EveilScreenState extends State<EveilScreen> {
     );
   }
 
+  // ── UI ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     // Favoris en premier
