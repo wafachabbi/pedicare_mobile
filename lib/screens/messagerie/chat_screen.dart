@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/message_model.dart';
+import '../../services/ia_message_service.dart';
 import '../../services/message_service.dart';
 import '../../theme/app_colors.dart';
 
@@ -30,7 +31,16 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _sending = false;
   Timer? _timer;
 
+  // ✨ Réponses suggérées par l'IA (côté pédiatre)
+  List<String> _suggestions = [];
+  bool _chargementIA = false;
+  bool _viaGemini = false;
+
+  /// Le contact est un pédiatre → je suis le parent
   bool get _isPediatre => widget.contactRole == 'pediatre';
+
+  /// Le contact est un parent → je suis le pédiatre
+  bool get _jeSuisPediatre => widget.contactRole == 'parent';
 
   @override
   void initState() {
@@ -86,6 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     _controller.clear();
+    setState(() => _suggestions = []);
     _fetch();
 
     // IA de tri : si le parent décrit une situation urgente
@@ -102,6 +113,22 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     }
+  }
+
+  // ── ✨ IA : générer 3 réponses suggérées ─────────────────────────────────
+  Future<void> _genererSuggestions() async {
+    setState(() => _chargementIA = true);
+    final (suggestions, viaGemini) = await IAMessageService.suggererReponses(
+      messages: _messages,
+      pediatreId: widget.userId,
+      nomParent: widget.contactName,
+    );
+    if (!mounted) return;
+    setState(() {
+      _suggestions = suggestions;
+      _viaGemini = viaGemini;
+      _chargementIA = false;
+    });
   }
 
   Future<void> _confirmDelete(MessageModel msg) async {
@@ -171,6 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   },
                 ),
               ),
+              if (_jeSuisPediatre) _buildSuggestions(),
               _buildInput(),
             ],
           ),
@@ -209,6 +237,107 @@ class _ChatScreenState extends State<ChatScreen> {
                 Text(_isPediatre ? 'Pédiatre' : 'Parent',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestions() {
+    // Bouton pour lancer l'IA
+    if (_suggestions.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            onTap: _chargementIA ? null : _genererSuggestions,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  AppColors.primary.withOpacity(0.35),
+                  AppColors.accent.withOpacity(0.25),
+                ]),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.secondary.withOpacity(0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_chargementIA)
+                    const SizedBox(
+                      width: 14, height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  else
+                    const Text('✨', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Text(_chargementIA ? "L'IA réfléchit…" : 'Suggérer des réponses (IA)',
+                      style: const TextStyle(color: Colors.white,
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Les 3 suggestions
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(_viaGemini ? '✨ Suggestions IA · Groq' : '✨ Suggestions IA',
+                  style: const TextStyle(color: AppColors.accent,
+                      fontSize: 12, fontWeight: FontWeight.w700)),
+              const Spacer(),
+              GestureDetector(
+                onTap: _genererSuggestions,
+                child: const Icon(Icons.refresh_rounded,
+                    color: AppColors.textSecondary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => setState(() => _suggestions = []),
+                child: const Icon(Icons.close_rounded,
+                    color: AppColors.textSecondary, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _suggestions.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, i) => GestureDetector(
+                // Remplit le champ : le pédiatre peut modifier avant d'envoyer
+                onTap: () {
+                  _controller.text = _suggestions[i];
+                  _controller.selection = TextSelection.collapsed(
+                      offset: _controller.text.length);
+                },
+                child: Container(
+                  width: 240,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.glassWhite,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.accent.withOpacity(0.5)),
+                  ),
+                  child: Text(_suggestions[i],
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 12)),
+                ),
+              ),
             ),
           ),
         ],
@@ -345,7 +474,6 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-// ── Séparateur de jour ("Aujourd'hui", "08/11/2026") ───────────────────────
 class _DaySeparator extends StatelessWidget {
   final DateTime date;
   const _DaySeparator({required this.date});
