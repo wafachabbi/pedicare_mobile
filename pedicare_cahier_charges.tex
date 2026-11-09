@@ -228,7 +228,8 @@ Gérer son profil professionnel, gérer ses disponibilités, accepter/refuser de
   \item Traitements actifs ;
   \item Historique des consultations ;
   \item Statistiques de suivi ;
-  \item Génération d'un résumé intelligent avant consultation.
+  \item Module Consultation : le parent génère par IA un résumé de consultation (résumé, points clés, suggestions) sur une période choisie, à partir du journal des symptômes et de l'historique de l'enfant ;
+  \item Partage du résumé en PDF ; le pédiatre consulte les résumés en lecture seule.
 \end{itemize}
 
 \subsection{Module 4 : Communication Parent \texorpdfstring{$\leftrightarrow$}{<->} Pédiatre \& Téléconsultation}
@@ -575,6 +576,9 @@ Le système de notifications permet notamment :
 
 \subsubsection*{Fonctionnalités}
 \begin{itemize}
+  \item Module Consultation : historique des consultations passées (rendez-vous terminés) et des résumés générés ;
+  \item Génération par le parent d'un résumé IA de consultation (résumé, points clés, suggestions) pour une période donnée, consultable, partageable en PDF et supprimable ;
+  \item Accès du pédiatre aux résumés de consultation en lecture seule (sans génération ni suppression) ;
   \item Tableau de bord centralisé : derniers événements, prochains RDV, vaccinations, traitements actifs ;
   \item Statistiques de suivi global (graphiques, indicateurs clés) ;
   \item Journal quotidien de santé (fièvre, toux, comportement, sommeil, appétit) ;
@@ -594,7 +598,7 @@ Le système de notifications permet notamment :
 
 \subsubsection*{Partie IA}
 \begin{itemize}
-  \item \textbf{Résumé intelligent pré-consultation (OpenAI API / Gemini API)} -- génération automatique d'un résumé structuré des informations de l'enfant à partir du journal et de l'historique ;
+  \item \textbf{Résumé IA de consultation (Gemini API)} -- généré à la demande du parent : résumé structuré, points clés et suggestions à partir du journal des symptômes et de l'historique de l'enfant (moteur local hors connexion, enrichi par Gemini si la clé est configurée) ;
   \item \textbf{Analyse contextuelle des symptômes} -- suggestions non diagnostiques basées sur les symptômes saisis (ex. : «~Fièvre depuis 3 jours, pensez à consulter~»).
 \end{itemize}
 
