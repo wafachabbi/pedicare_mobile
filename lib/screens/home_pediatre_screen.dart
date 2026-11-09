@@ -5,6 +5,7 @@ import '../services/rendezvous_service.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
 import 'rendezvous/calendrier_pediatre_screen.dart';
+import 'messagerie/conversations_screen.dart';
 
 class HomePediatreScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -125,6 +126,12 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
           ),
         ]),
         Row(children: [
+          // Messagerie (Arij)
+          _iconBtn(Icons.chat_bubble_outline_rounded,
+              onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => ConversationsScreen(user: widget.user),
+              ))),
+          const SizedBox(width: 10),123456
           _iconBtn(Icons.refresh_rounded, onTap: _loadRDVs),
           const SizedBox(width: 10),
           _iconBtn(Icons.calendar_month_rounded, onTap: () {

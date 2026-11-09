@@ -1,47 +1,40 @@
 class MessageModel {
-  final String id;
+  final int id;
   final String senderId;
-  final String senderName;
-  final String senderRole; // 'parent' ou 'pediatre'
+  final String receiverId;
+  final String? enfantId;
   final String content;
+  final String type; // 'texte' ou 'bilan'
   final DateTime date;
   final bool lu;
 
   MessageModel({
     required this.id,
     required this.senderId,
-    required this.senderName,
-    required this.senderRole,
+    required this.receiverId,
+    this.enfantId,
     required this.content,
+    this.type = 'texte',
     required this.date,
     this.lu = false,
   });
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'senderId': senderId,
-        'senderName': senderName,
-        'senderRole': senderRole,
-        'content': content,
-        'date': date.toIso8601String(),
-        'lu': lu,
-      };
+  bool isMine(String userId) => senderId == userId;
+  bool get estBilan => type == 'bilan';
 
-  factory MessageModel.fromMap(Map<String, dynamic> map) {
-    DateTime parseDate(dynamic val) {
-      if (val == null) return DateTime.now();
-      if (val is String) return DateTime.parse(val);
-      try { return (val as dynamic).toDate(); } catch (_) {}
-      return DateTime.now();
-    }
+  factory MessageModel.fromMap(Map<String, dynamic> m) {
+    // SQLite stocke datetime('now') en UTC : "2026-11-09 18:30:00"
+    final raw = (m['created_at'] ?? '').toString();
+    final date = DateTime.tryParse('${raw.replaceFirst(' ', 'T')}Z')?.toLocal() ?? DateTime.now();
     return MessageModel(
-      id: map['id'] ?? '',
-      senderId: map['senderId'] ?? '',
-      senderName: map['senderName'] ?? '',
-      senderRole: map['senderRole'] ?? 'parent',
-      content: map['content'] ?? '',
-      date: parseDate(map['date']),
-      lu: map['lu'] ?? false,
+      id: m['id'] as int,
+      senderId: m['sender_id'].toString(),
+      receiverId: m['receiver_id'].toString(),
+      enfantId: m['enfant_id']?.toString(),
+      content: m['content'] ?? '',
+      type: m['type'] ?? 'texte',
+      date: date,
+      lu: (m['lu'] ?? 0) == 1,
     );
   }
 }
