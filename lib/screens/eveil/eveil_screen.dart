@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import '../../models/activite_model.dart';
 import '../../models/enfant_model.dart';
 import '../../services/eveil_service.dart';
+import '../../services/ia_eveil_service.dart';
 import '../../theme/app_colors.dart';
 import 'association_game_screen.dart';
+import 'bilan_eveil_screen.dart';
+import 'memory_game_screen.dart';
 
 class EveilScreen extends StatefulWidget {
   final EnfantModel enfant;
@@ -23,6 +26,7 @@ class _EveilScreenState extends State<EveilScreen> {
   };
 
   List<ActiviteModel> _activites = [];
+  List<Recommandation> _recos = [];
   Set<int> _favoris = {};
   Set<String> _badges = {};
   String? _categorie;
@@ -41,11 +45,13 @@ class _EveilScreenState extends State<EveilScreen> {
     final acts = await EveilService.getActivitesPourAge(_ageMois, categorie: _categorie);
     final favs = await EveilService.getFavoris(widget.enfant.id);
     final badges = await EveilService.getBadgesObtenus(widget.enfant.id);
+    final recos = await IAEveilService.recommander(widget.enfant);
     if (!mounted) return;
     setState(() {
       _activites = acts;
       _favoris = favs;
       _badges = badges;
+      _recos = recos;
       _loading = false;
     });
   }
@@ -63,22 +69,16 @@ class _EveilScreenState extends State<EveilScreen> {
 
   // ── Ouvrir une activité ───────────────────────────────────────────────────
   Future<void> _ouvrirActivite(ActiviteModel a) async {
+    Widget? jeu;
     if (a.typeJeu == 'association') {
-      await Navigator.push(context, MaterialPageRoute(
-        builder: (_) => AssociationGameScreen(enfant: widget.enfant, activite: a),
-      ));
-      _load(); // rafraîchir les badges après la partie
-      return;
+      jeu = AssociationGameScreen(enfant: widget.enfant, activite: a);
+    } else if (a.typeJeu == 'memory') {
+      jeu = MemoryGameScreen(enfant: widget.enfant, activite: a);
     }
-    if (a.estJeu) {
-      // Jeu Memory : branché à l'étape suivante
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Le jeu arrive bientôt 🎮'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+
+    if (jeu != null) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => jeu!));
+      _load(); // rafraîchir badges + recommandations après la partie
       return;
     }
     _ouvrirActiviteFamille(a);
@@ -194,32 +194,37 @@ class _EveilScreenState extends State<EveilScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildBadges(),
-              const SizedBox(height: 16),
-              _buildCategories(),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.secondary))
-                    : liste.isEmpty
-                    ? const Center(
-                    child: Text('Aucune activité pour cet âge',
-                        style: TextStyle(color: AppColors.textSecondary)))
-                    : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                    itemCount: liste.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _buildActiviteCard(liste[i]),
-                  ),
-                ),
-              ),
-            ],
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.secondary))
+              : RefreshIndicator(
+            onRefresh: _load,
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 30),
+              children: [
+                _buildHeader(),
+                _buildBadges(),
+                if (_categorie == null && _recos.isNotEmpty) ...[
+                  const SizedBox(height: 20),
+                  _buildRecommandations(),
+                ],
+                const SizedBox(height: 20),
+                _buildCategories(),
+                const SizedBox(height: 12),
+                if (liste.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(
+                      child: Text('Aucune activité pour cet âge',
+                          style: TextStyle(color: AppColors.textSecondary)),
+                    ),
+                  )
+                else
+                  ...liste.map((a) => Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: _buildActiviteCard(a),
+                  )),
+              ],
+            ),
           ),
         ),
       ),
@@ -245,15 +250,33 @@ class _EveilScreenState extends State<EveilScreen> {
             ),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Éveil & Jeux',
-                  style: TextStyle(color: AppColors.textPrimary,
-                      fontSize: 20, fontWeight: FontWeight.w700)),
-              Text('${widget.enfant.prenom} · $_ageMois mois',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Éveil & Jeux',
+                    style: TextStyle(color: AppColors.textPrimary,
+                        fontSize: 20, fontWeight: FontWeight.w700)),
+                Text('${widget.enfant.prenom} · $_ageMois mois',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+          // Bouton Bilan IA
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+              builder: (_) => BilanEveilScreen(enfant: widget.enfant),
+            )),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: AppColors.buttonGradient),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('📊 Bilan IA',
+                  style: TextStyle(color: Colors.white,
+                      fontSize: 12, fontWeight: FontWeight.w700)),
+            ),
           ),
         ],
       ),
@@ -286,6 +309,76 @@ class _EveilScreenState extends State<EveilScreen> {
           );
         }).toList(),
       ),
+    );
+  }
+
+  // ✨ Recommandations IA
+  Widget _buildRecommandations() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text('✨ Recommandé pour ${widget.enfant.prenom}',
+              style: const TextStyle(color: AppColors.textPrimary,
+                  fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _recos.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) {
+              final r = _recos[i];
+              return GestureDetector(
+                onTap: () => _ouvrirActivite(r.activite),
+                child: Container(
+                  width: 200,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.35),
+                        AppColors.accent.withOpacity(0.20),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.secondary.withOpacity(0.4)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(r.activite.emoji, style: const TextStyle(fontSize: 22)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(r.activite.titre,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: AppColors.textPrimary,
+                                    fontSize: 13, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                      Text(r.raison,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppColors.accent, fontSize: 11)),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
