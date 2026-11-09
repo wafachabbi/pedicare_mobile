@@ -15,7 +15,10 @@ class DatabaseService {
   /// Version 7 : table conseils_nutrition (consignes rédigées par le pédiatre).
   /// Version 8 : assistant IA (tables conversations_ia, messages_ia).
   /// Version 9 : RAG de l'assistant (cache rag_embeddings, sources citées).
-  static const int _version = 9;
+  /// Version 10 : Module 3 — observations saisies par le pédiatre pendant la
+  ///   consultation (table observations_consultation) et lien
+  ///   consultations.observation_id vers le résumé IA généré par le parent.
+  static const int _version = 10;
 
   static Future<Database> get database async {
     _db ??= await _initDB();
@@ -89,6 +92,13 @@ class DatabaseService {
     // traitements, journal_alimentaire) : toutes en IF NOT EXISTS, donc sans
     // effet si elles existent déjà.
     await _createModuleTables(db);
+    // v10 : lien entre un résumé IA et la consultation du pédiatre.
+    try {
+      await db.execute(
+          'ALTER TABLE consultations ADD COLUMN observation_id INTEGER');
+    } catch (_) {
+      // Colonne déjà existante : normal.
+    }
   }
 
   // ── Tables des modules existants ───────────────────────────────────────────
@@ -205,7 +215,29 @@ class DatabaseService {
         periode_fin   TEXT,
         nb_entrees    INTEGER DEFAULT 0,
         generee_ia    INTEGER DEFAULT 0,
+        observation_id INTEGER,
         created_at    TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Module 3 : données saisies par le pédiatre pendant la consultation.
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS observations_consultation (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id         INTEGER NOT NULL,
+        pediatre_id       TEXT,
+        pediatre_nom      TEXT,
+        date_consultation TEXT NOT NULL,
+        motif             TEXT NOT NULL,
+        poids             REAL,
+        taille            REAL,
+        temperature       REAL,
+        observations      TEXT,
+        diagnostic        TEXT,
+        traitement        TEXT,
+        recommandations   TEXT,
+        created_at        TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
       )
     ''');

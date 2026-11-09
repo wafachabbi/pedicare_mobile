@@ -2,6 +2,7 @@ import '../models/analyse_symptomes_model.dart';
 import '../models/croissance_model.dart';
 import '../models/enfant_model.dart';
 import '../models/journal_symptome_model.dart';
+import '../models/observation_consultation_model.dart';
 import '../models/rendezvous_model.dart';
 import '../models/traitement_model.dart';
 import '../models/vaccin_model.dart';
@@ -261,6 +262,112 @@ class IAConsultationService {
       periodeDebut: debut,
       periodeFin: maintenant,
       nbEntrees: recents.length,
+    );
+  }
+
+  // ── Résumé IA d'une consultation saisie par le pédiatre ──────────────────
+  /// Généré par le parent après la visite, à partir des données du pédiatre
+  /// (mesures, observations, diagnostic, traitement, recommandations) et du
+  /// journal des symptômes des 7 jours précédant la consultation.
+  static Future<ResumeConsultationIA> genererResumeDepuisObservation({
+    required EnfantModel enfant,
+    required ObservationConsultationModel observation,
+    required List<JournalSymptomeModel> journal,
+  }) async {
+    final o = observation;
+    final debut = o.dateConsultation.subtract(const Duration(days: 7));
+    final avant = journal
+        .where((e) =>
+            !e.date.isBefore(debut) &&
+            !e.date.isAfter(o.dateConsultation.add(const Duration(days: 1))))
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    // Points clés : données du pédiatre, sans interprétation.
+    final points = <String>[
+      'Consultation du ${_fmtDate(o.dateConsultation)} avec ${o.signature}',
+      'Motif : ${o.motif}',
+      if (o.poids != null || o.taille != null || o.temperature != null)
+        'Mesures : ${[
+          if (o.poids != null) 'poids ${o.poids} kg',
+          if (o.taille != null) 'taille ${o.taille} cm',
+          if (o.temperature != null)
+            'température ${o.temperature!.toStringAsFixed(1)} °C',
+        ].join(', ')}',
+      if (o.observations.trim().isNotEmpty)
+        'Observations : ${o.observations.trim()}',
+      if (o.diagnostic.trim().isNotEmpty)
+        'Diagnostic du pédiatre : ${o.diagnostic.trim()}',
+      if (o.traitement.trim().isNotEmpty)
+        'Traitement prescrit : ${o.traitement.trim()}',
+      if (avant.isNotEmpty)
+        'Journal avant la visite : ${avant.length} entrée(s), dernière : ${avant.first.resumeCourt}',
+    ];
+
+    // Suggestions : recommandations du pédiatre ligne par ligne + rappels.
+    final suggestions = <String>[
+      ...o.recommandations
+          .split('\n')
+          .map((l) => l.replaceFirst(RegExp(r'^[-•]\s*'), '').trim())
+          .where((l) => l.isNotEmpty),
+      if (o.traitement.trim().isNotEmpty)
+        'Respecter la posologie et la durée du traitement prescrit.',
+      'Continuer à renseigner le journal des symptômes pour le suivi.',
+      'Recontacter le pédiatre si les symptômes persistent ou s\'aggravent.',
+    ];
+
+    String resume = 'Compte rendu de la consultation du '
+        '${_fmtDate(o.dateConsultation)} de ${enfant.nomComplet} avec '
+        '${o.signature}. Motif : ${o.motif}. '
+        '${o.observations.trim().isNotEmpty ? 'Le pédiatre a observé : ${o.observations.trim()}. ' : ''}'
+        '${o.diagnostic.trim().isNotEmpty ? 'Conclusion du pédiatre : ${o.diagnostic.trim()}. ' : ''}'
+        '${o.traitement.trim().isNotEmpty ? 'Traitement : ${o.traitement.trim()}. ' : ''}'
+        '${o.recommandations.trim().isNotEmpty ? 'Recommandations : ${o.recommandations.trim().replaceAll('\n', ' ; ')}.' : ''}';
+    bool genereeIA = false;
+
+    if (GeminiService.configuree) {
+      final journalStr = avant
+          .take(7)
+          .map((e) => '${_fmtDate(e.date)}: ${e.resumeCourt}')
+          .join(' | ');
+      final prompt = """
+Tu es l'assistant de l'application PediCare. Rédige pour un PARENT un résumé
+clair et rassurant de la consultation pédiatrique de son enfant, en français.
+
+Enfant : ${enfant.nomComplet}, ${enfant.age} ans
+Date : ${_fmtDate(o.dateConsultation)} — ${o.signature}
+Motif : ${o.motif}
+Mesures : poids=${o.poids ?? '-'} kg, taille=${o.taille ?? '-'} cm, température=${o.temperature ?? '-'} °C
+Observations du pédiatre : ${o.observations.isEmpty ? '-' : o.observations}
+Diagnostic du pédiatre : ${o.diagnostic.isEmpty ? '-' : o.diagnostic}
+Traitement prescrit : ${o.traitement.isEmpty ? '-' : o.traitement}
+Recommandations : ${o.recommandations.isEmpty ? '-' : o.recommandations}
+Journal des symptômes avant la visite : ${journalStr.isEmpty ? 'aucune entrée' : journalStr}
+
+Contraintes : 5 à 7 phrases, vocabulaire simple, n'ajoute AUCUN diagnostic ni
+traitement qui ne figure pas ci-dessus, explique ce que le parent doit faire
+ensuite, texte pur sans markdown.
+""";
+      final enrichi = await GeminiService.generer(
+        prompt: prompt,
+        temperature: 0.4,
+        maxOutputTokens: 1024,
+      );
+      if (enrichi != null && enrichi.trim().isNotEmpty) {
+        resume = enrichi.trim();
+        genereeIA = true;
+      }
+    }
+
+    return ResumeConsultationIA(
+      titre: 'Consultation du ${_fmtDate(o.dateConsultation)} — ${o.motif}',
+      resume: resume,
+      pointsCles: points,
+      suggestions: suggestions,
+      genereeIA: genereeIA,
+      periodeDebut: debut,
+      periodeFin: o.dateConsultation,
+      nbEntrees: avant.length,
     );
   }
 

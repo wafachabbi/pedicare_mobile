@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/analyse_symptomes_model.dart';
 import '../../models/consultation_model.dart';
 import '../../models/enfant_model.dart';
+import '../../models/observation_consultation_model.dart';
 import '../../services/consultation_service.dart';
 import '../../services/croissance_service.dart';
 import '../../services/ia_consultation_service.dart';
@@ -17,10 +18,15 @@ class ResumeConsultationScreen extends StatefulWidget {
   final EnfantModel enfant;
   final ConsultationModel? consultation;
 
+  /// Consultation saisie par le pédiatre : le résumé IA est alors généré à
+  /// partir de ses observations (parcours parent après la visite).
+  final ObservationConsultationModel? observation;
+
   const ResumeConsultationScreen({
     super.key,
     required this.enfant,
     this.consultation,
+    this.observation,
   });
 
   @override
@@ -58,6 +64,20 @@ class _ResumeConsultationScreenState extends State<ResumeConsultationScreen> {
 
     try {
       final journal = await JournalSymptomeService.getEntrees(widget.enfant.id);
+      if (widget.observation != null) {
+        final resume =
+            await IAConsultationService.genererResumeDepuisObservation(
+          enfant: widget.enfant,
+          observation: widget.observation!,
+          journal: journal,
+        );
+        if (!mounted) return;
+        setState(() {
+          _resume = resume;
+          _loading = false;
+        });
+        return;
+      }
       final vaccins = await VaccinService.getVaccins(widget.enfant.id);
       final rdvs = await RendezVousService.getRendezVous(widget.enfant.id);
       final mesures = await CroissanceService.getMesures(widget.enfant.id);
@@ -104,6 +124,7 @@ class _ResumeConsultationScreenState extends State<ResumeConsultationScreen> {
       periodeFin: r.periodeFin,
       nbEntrees: r.nbEntrees,
       genereeIA: r.genereeIA,
+      observationId: widget.observation?.id,
       createdAt: DateTime.now(),
     );
   }

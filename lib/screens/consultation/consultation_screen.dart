@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../models/acteur.dart';
 import '../../models/consultation_model.dart';
 import '../../models/enfant_model.dart';
+import '../../models/observation_consultation_model.dart';
 import '../../models/rendezvous_model.dart';
 import '../../services/consultation_service.dart';
 import '../../services/journal_pdf_service.dart';
+import '../../services/observation_consultation_service.dart';
 import '../../services/rendezvous_service.dart';
 import '../../theme/app_colors.dart';
+import 'add_observation_screen.dart';
 import 'resume_consultation_screen.dart';
 
 class ConsultationScreen extends StatefulWidget {
@@ -14,8 +18,15 @@ class ConsultationScreen extends StatefulWidget {
   /// Mode pédiatre : consultation des résumés, sans génération ni suppression.
   final bool lectureSeule;
 
+  /// Pédiatre connecté : il saisit les données de la consultation
+  /// (observations, diagnostic…). Le parent en génère ensuite le résumé IA.
+  final Acteur? pediatre;
+
   const ConsultationScreen(
-      {super.key, required this.enfant, this.lectureSeule = false});
+      {super.key,
+      required this.enfant,
+      this.lectureSeule = false,
+      this.pediatre});
 
   @override
   State<ConsultationScreen> createState() => _ConsultationScreenState();
@@ -24,7 +35,13 @@ class ConsultationScreen extends StatefulWidget {
 class _ConsultationScreenState extends State<ConsultationScreen> {
   List<ConsultationModel> _consultations = [];
   List<RendezVousModel> _historique = [];
+  List<ObservationConsultationModel> _observations = [];
+
+  /// observation_id → résumé IA généré par le parent.
+  Map<String, ConsultationModel> _resumesParObservation = {};
   bool _loading = true;
+
+  bool get _estPediatre => widget.pediatre?.estPediatre ?? false;
 
   @override
   void initState() {
@@ -37,6 +54,12 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     final consultations =
         await ConsultationService.getConsultations(widget.enfant.id);
     final rdvs = await RendezVousService.getRendezVous(widget.enfant.id);
+    final observations =
+        await ObservationConsultationService.getObservations(widget.enfant.id);
+    final parObservation = <String, ConsultationModel>{
+      for (final c in consultations)
+        if (c.observationId != null) c.observationId!: c,
+    };
     final now = DateTime.now();
     final historique = rdvs
         .where((r) =>
@@ -47,6 +70,8 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
     setState(() {
       _consultations = consultations;
       _historique = historique;
+      _observations = observations;
+      _resumesParObservation = parObservation;
       _loading = false;
     });
   }
@@ -78,7 +103,11 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ),
         ),
       ),
-      floatingActionButton: widget.lectureSeule ? null : _buildFAB(context),
+      floatingActionButton: _estPediatre
+          ? _buildFABPediatre(context)
+          : widget.lectureSeule
+              ? null
+              : _buildFAB(context),
     );
   }
 
@@ -152,7 +181,17 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
       children: [
         _buildHero(),
         const SizedBox(height: 22),
-        _buildSectionTitle('Historique des consultations',
+        _buildSectionTitle('Consultations du pédiatre',
+            '${_observations.length} consultation(s)'),
+        const SizedBox(height: 10),
+        if (_observations.isEmpty)
+          _buildEmptyLine(_estPediatre
+              ? 'Ajoutez les données de la consultation avec « Nouvelle consultation ».'
+              : "Le pédiatre n'a encore saisi aucune consultation.")
+        else
+          ..._observations.map(_buildObservationCard),
+        const SizedBox(height: 22),
+        _buildSectionTitle('Historique des rendez-vous',
             '${_historique.length} rendez-vous passé(s)'),
         const SizedBox(height: 10),
         if (_historique.isEmpty)
@@ -555,6 +594,174 @@ class _ConsultationScreenState extends State<ConsultationScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ── Consultations saisies par le pédiatre ─────────────────────────────────
+  Widget _buildObservationCard(ObservationConsultationModel o) {
+    const color = Color(0xFFE67E22);
+    final resume = _resumesParObservation[o.id];
+    final mesures = [
+      if (o.poids != null) '${o.poids} kg',
+      if (o.taille != null) '${o.taille} cm',
+      if (o.temperature != null) '${o.temperature!.toStringAsFixed(1)} °C',
+    ].join(' · ');
+    Widget ligne(String label, String valeur) => valeur.trim().isEmpty
+        ? const SizedBox.shrink()
+        : Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(
+                    text: '$label : ',
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700)),
+                TextSpan(text: valeur.trim()),
+              ]),
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 11, height: 1.4),
+            ),
+          );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: AppColors.inputFill,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🩺', style: TextStyle(fontSize: 22)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(o.motif,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700)),
+                    Text('${_fmtDate(o.dateConsultation)} · ${o.signature}',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 10.5)),
+                  ],
+                ),
+              ),
+              if (resume != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9B59B6).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: const Text('Résumé IA',
+                      style: TextStyle(
+                          color: Color(0xFF9B59B6),
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w800)),
+                ),
+            ],
+          ),
+          ligne('Mesures', mesures),
+          ligne('Observations', o.observations),
+          ligne('Diagnostic', o.diagnostic),
+          ligne('Traitement', o.traitement),
+          ligne('Recommandations', o.recommandations.replaceAll('\n', ' ; ')),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              if (resume != null)
+                _action('Voir le résumé IA', Icons.auto_awesome,
+                    () => _ouvrirResume(resume),
+                    color: const Color(0xFF9B59B6))
+              else if (!_estPediatre && !widget.lectureSeule)
+                _action('Générer le résumé IA', Icons.auto_awesome,
+                    () => _genererDepuisObservation(o),
+                    color: const Color(0xFF0F9D58)),
+              if (_estPediatre) ...[
+                _action('Modifier', Icons.edit_outlined,
+                    () => _editerObservation(o)),
+                _action('Supprimer', Icons.delete_outline_rounded,
+                    () => _supprimerObservation(o),
+                    color: AppColors.danger),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editerObservation([ObservationConsultationModel? o]) async {
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddObservationScreen(
+          enfant: widget.enfant,
+          pediatre: widget.pediatre!,
+          existante: o,
+        ),
+      ),
+    );
+    if (ok == true) _load();
+  }
+
+  Future<void> _genererDepuisObservation(ObservationConsultationModel o) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            ResumeConsultationScreen(enfant: widget.enfant, observation: o),
+      ),
+    );
+    _load();
+  }
+
+  Future<void> _supprimerObservation(ObservationConsultationModel o) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0D2D5E),
+        title: const Text('Supprimer la consultation ?',
+            style: TextStyle(color: AppColors.textPrimary)),
+        content: const Text(
+            'Les données saisies et le résumé IA associé seront supprimés.',
+            style: TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annuler')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Supprimer',
+                  style: TextStyle(color: AppColors.danger))),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ObservationConsultationService.deleteObservation(o.id);
+    _load();
+  }
+
+  Widget _buildFABPediatre(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: () => _editerObservation(),
+      backgroundColor: const Color(0xFFE67E22),
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: const Text('Nouvelle consultation',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
     );
   }
 

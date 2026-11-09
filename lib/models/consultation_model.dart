@@ -9,6 +9,10 @@ class ConsultationModel {
   final DateTime? periodeFin;
   final int nbEntrees;
   final bool genereeIA;
+
+  /// Consultation du pédiatre dont ce résumé est issu (null = résumé
+  /// pré-consultation généré à partir du seul suivi du parent).
+  final String? observationId;
   final DateTime createdAt;
 
   ConsultationModel({
@@ -22,6 +26,7 @@ class ConsultationModel {
     this.periodeFin,
     this.nbEntrees = 0,
     this.genereeIA = false,
+    this.observationId,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -47,6 +52,8 @@ class ConsultationModel {
         'periode_fin': periodeFin?.toIso8601String(),
         'nb_entrees': nbEntrees,
         'generee_ia': genereeIA ? 1 : 0,
+        'observation_id':
+            observationId == null ? null : int.tryParse(observationId!),
         'created_at': createdAt.toIso8601String(),
       };
 
@@ -61,6 +68,7 @@ class ConsultationModel {
         'periodeFin': periodeFin?.toIso8601String(),
         'nbEntrees': nbEntrees,
         'genereeIA': genereeIA,
+        'observationId': observationId,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -96,6 +104,8 @@ class ConsultationModel {
       genereeIA: (map['genereeIA'] ?? map['generee_ia']) == true ||
           (map['genereeIA'] ?? map['generee_ia']) == 1 ||
           (map['genereeIA'] ?? map['generee_ia']) == '1',
+      observationId:
+          (map['observationId'] ?? map['observation_id'])?.toString(),
       createdAt: parseDate(map['createdAt'] ?? map['created_at']) ??
           DateTime.now(),
     );

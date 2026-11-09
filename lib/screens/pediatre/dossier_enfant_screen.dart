@@ -10,7 +10,9 @@ import '../pharma/pedipharma_screen.dart';
 
 /// Espace pédiatre : dossier d'un enfant dont le parent a partagé le suivi.
 ///
-/// Lecture seule : journal des symptômes, résumés de consultation.
+/// Lecture seule : journal des symptômes.
+/// Consultations : le pédiatre saisit ses observations ; le parent en génère
+/// ensuite le résumé IA.
 /// Actions du pédiatre : prescriptions (PediPharma), allergies, consignes
 /// alimentaires et journal alimentaire (Nutrition).
 class DossierEnfantScreen extends StatelessWidget {
@@ -73,14 +75,15 @@ class DossierEnfantScreen extends StatelessWidget {
             const Color(0xFF00C9A7),
             () => ouvrir(JournalSymptomesScreen(enfant: enfant, lectureSeule: true)),
           ),
+          const PcSectionTitle('Vos actions'),
           _ligne(
             '🩺',
-            'Résumés de consultation',
-            'Préparés par le parent avant la visite',
+            'Consultations',
+            'Saisir observations, diagnostic et recommandations · voir les résumés',
             const Color(0xFFE67E22),
-            () => ouvrir(ConsultationScreen(enfant: enfant, lectureSeule: true)),
+            () => ouvrir(ConsultationScreen(
+                enfant: enfant, lectureSeule: true, pediatre: pediatre)),
           ),
-          const PcSectionTitle('Vos actions'),
           _ligne(
             '💊',
             'PediPharma',

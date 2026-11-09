@@ -67,6 +67,25 @@ class ConsultationService {
     }
   }
 
+  /// Résumé IA déjà généré par le parent pour une consultation du pédiatre.
+  static Future<ConsultationModel?> getParObservation(
+      String observationId) async {
+    try {
+      final db = await DatabaseService.database;
+      final rows = await db.query(
+        _table,
+        where: 'observation_id = ?',
+        whereArgs: [int.parse(observationId)],
+        orderBy: 'id DESC',
+        limit: 1,
+      );
+      if (rows.isEmpty) return null;
+      return ConsultationModel.fromMap(_normalize(rows.first));
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<ConsultationModel?> getDerniere(String enfantId) async {
     final list = await getConsultations(enfantId, limit: 1);
     return list.isEmpty ? null : list.first;
@@ -83,6 +102,7 @@ class ConsultationService {
         'periode_fin': e['periode_fin'],
         'nb_entrees': e['nb_entrees'] ?? 0,
         'generee_ia': e['generee_ia'] ?? 0,
+        'observation_id': e['observation_id'],
         'created_at': e['created_at'],
       };
 }

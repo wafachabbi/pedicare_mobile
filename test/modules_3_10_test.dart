@@ -4,6 +4,7 @@ import 'package:projet_mobile/models/analyse_symptomes_model.dart';
 import 'package:projet_mobile/models/consultation_model.dart';
 import 'package:projet_mobile/models/enfant_model.dart';
 import 'package:projet_mobile/models/journal_symptome_model.dart';
+import 'package:projet_mobile/models/observation_consultation_model.dart';
 import 'package:projet_mobile/models/traitement_model.dart';
 import 'package:projet_mobile/services/gemini_service.dart';
 import 'package:projet_mobile/services/ia_consultation_service.dart';
@@ -207,6 +208,49 @@ void main() {
       });
 
       expect(e.partageJournal, isFalse);
+    });
+  });
+  group('Consultation saisie par le pédiatre → résumé IA du parent', () {
+    final obs = ObservationConsultationModel(
+      id: '7',
+      enfantId: '1',
+      pediatreNom: 'Rahma',
+      dateConsultation: DateTime(2026, 11, 5),
+      motif: 'Fièvre et toux',
+      poids: 12.4,
+      temperature: 38.6,
+      observations: 'Gorge rouge, auscultation normale',
+      diagnostic: 'Rhinopharyngite',
+      traitement: 'Paracétamol 3 fois par jour',
+      recommandations: 'Bien hydrater\nSurveiller la température',
+    );
+
+    test('le résumé reprend les données du pédiatre et ses recommandations',
+        () async {
+      final r = await IAConsultationService.genererResumeDepuisObservation(
+        enfant: _enfant(),
+        observation: obs,
+        journal: [
+          _entree(date: DateTime(2026, 11, 3), temperature: 38.9),
+          _entree(date: DateTime(2026, 10, 1), temperature: 39.5),
+        ],
+      );
+      expect(r.genereeIA, isFalse); // Gemini désactivé : moteur local
+      expect(r.titre, contains('Fièvre et toux'));
+      expect(r.resume, contains('Dr. Rahma'));
+      expect(r.resume, contains('Rhinopharyngite'));
+      expect(r.pointsCles, contains('Diagnostic du pédiatre : Rhinopharyngite'));
+      expect(r.suggestions, containsAll(['Bien hydrater', 'Surveiller la température']));
+      expect(r.nbEntrees, 1); // seule l'entrée des 7 jours précédents compte
+    });
+
+    test('ConsultationModel conserve le lien vers la consultation', () {
+      final c = ConsultationModel.fromMap({
+        'id': '3', 'enfant_id': '1', 'titre': 't', 'resume': 'r',
+        'observation_id': 7,
+      });
+      expect(c.observationId, '7');
+      expect(c.toDbMap()['observation_id'], 7);
     });
   });
 }
