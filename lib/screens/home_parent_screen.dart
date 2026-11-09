@@ -9,7 +9,7 @@ import 'login_screen.dart';
 import 'enfant/add_enfant_screen.dart';
 import 'enfant/enfant_detail_screen.dart';
 import 'notifications_screen.dart';
-import 'messagerie/conversations_screen.dart';
+import '../widgets/messagerie_button.dart';
 
 class HomeParentScreen extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -96,11 +96,8 @@ class _HomeParentScreenState extends State<HomeParentScreen> {
                     ),
                     Row(
                       children: [
-                        // Messagerie (Arij)
-                        _iconBtn(Icons.chat_bubble_outline_rounded,
-                            onTap: () => Navigator.push(context, MaterialPageRoute(
-                              builder: (_) => ConversationsScreen(user: widget.user),
-                            ))),
+                        // Messagerie (Arij) : badge + notifications
+                        MessagerieButton(user: widget.user),
                         const SizedBox(width: 10),
                         _buildBellBtn(context, parentId),
                         const SizedBox(width: 10),
