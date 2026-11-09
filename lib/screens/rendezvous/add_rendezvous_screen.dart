@@ -38,11 +38,6 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
   PediatreModel? _selectedPediatre;
   bool _loadingPediatres = true;
 
-  final List<String> _specialites = [
-    'Pédiatre', 'Généraliste', 'Ophtalmologue', 'Dentiste',
-    'ORL', 'Dermatologue', 'Orthopédiste', 'Neurologue', 'Cardiologue',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -301,38 +296,6 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
     );
   }
 
-  Widget _buildSpecialiteDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.inputFill,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.glassBorder),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _specialites.contains(_specialiteController.text)
-              ? _specialiteController.text
-              : null,
-          hint: const Text('Spécialité',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
-          dropdownColor: const Color(0xFF0D2D5E),
-          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-              color: AppColors.textSecondary),
-          isExpanded: true,
-          items: _specialites.map((s) => DropdownMenuItem(
-            value: s,
-            child: Text(s),
-          )).toList(),
-          onChanged: (val) {
-            if (val != null) setState(() => _specialiteController.text = val);
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildDateTimePicker() {
     final months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
         'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -440,7 +403,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: _selectedPediatre == null
-                  ? AppColors.primary.withOpacity(0.15)
+                  ? AppColors.primary.withValues(alpha: 0.15)
                   : AppColors.inputFill,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
@@ -483,7 +446,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: selected
-                    ? const Color(0xFF00C9A7).withOpacity(0.1)
+                    ? const Color(0xFF00C9A7).withValues(alpha: 0.1)
                     : AppColors.inputFill,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
@@ -498,7 +461,7 @@ class _AddRendezVousScreenState extends State<AddRendezVousScreen> {
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00C9A7).withOpacity(0.15),
+                      color: const Color(0xFF00C9A7).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(

@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../models/enfant_model.dart';
+import '../../models/pediatre_model.dart';
 import '../../services/enfant_service.dart';
+import '../../services/pediatre_service.dart';
 import '../../theme/app_colors.dart';
+import '../assistant/assistant_screen.dart';
+import '../consultation/consultation_screen.dart';
 import '../croissance/croissance_screen.dart';
+import '../dashboard/tableau_bord_screen.dart';
+import '../journal/journal_symptomes_screen.dart';
+import '../nutrition/nutrition_screen.dart';
+import '../pharma/pedipharma_screen.dart';
 import '../vaccination/vaccination_screen.dart';
 import '../rendezvous/rendezvous_screen.dart';
 
-class EnfantDetailScreen extends StatelessWidget {
+class EnfantDetailScreen extends StatefulWidget {
   final EnfantModel enfant;
   final VoidCallback? onDelete;
 
@@ -15,6 +23,114 @@ class EnfantDetailScreen extends StatelessWidget {
     required this.enfant,
     this.onDelete,
   });
+
+  @override
+  State<EnfantDetailScreen> createState() => _EnfantDetailScreenState();
+}
+
+class _EnfantDetailScreenState extends State<EnfantDetailScreen> {
+  EnfantModel get enfant => widget.enfant;
+  VoidCallback? get onDelete => widget.onDelete;
+
+  late bool _partageJournal;
+  List<PediatreModel> _pediatres = [];
+  String? _pediatreSelectionne; // ID du pédiatre choisi par le parent
+
+  @override
+  void initState() {
+    super.initState();
+    _partageJournal = enfant.partageJournal;
+    _pediatreSelectionne = enfant.pediatreId;
+    _chargerPediatres();
+  }
+
+  Future<void> _chargerPediatres() async {
+    final list = await PediatreService.getPediatres();
+    setState(() => _pediatres = list);
+  }
+
+  Future<void> _basculerPartage(bool valeur) async {
+    setState(() => _partageJournal = valeur);
+
+    // Si on active le partage, on demande de choisir un pédiatre
+    if (valeur && _pediatres.isNotEmpty) {
+      // Show bottom sheet for pediatrician selection
+      final String? result = await showModalBottomSheet<String?>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: const Color(0xFF0D2D5E),
+        builder: (_) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Choisir le pédiatre',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+              const Divider(color: Colors.white24),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _pediatres.length,
+                  itemBuilder: (context, index) {
+                    final pediatre = _pediatres[index];
+                    return ListTile(
+                      title: Text(pediatre.name,
+                          style: const TextStyle(color: Colors.white)),
+                      subtitle: Text(pediatre.email,
+                          style: TextStyle(color: Colors.white70)),
+                      tileColor: const Color(0xFF162d4e),
+                      onTap: () => Navigator.pop(context, pediatre.id),
+                    );
+                  },
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Aucun (personne n\'aura accès)',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, null),
+                child: const Text('Aucun pédiatre'),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (result != null) {
+        _pediatreSelectionne = result;
+      } else {
+        _pediatreSelectionne = null;
+      }
+    }
+
+    final ok = await EnfantService.setPartageJournal(
+        enfant.id, valeur, pediatreId: _pediatreSelectionne);
+    if (!mounted) return;
+    if (!ok) {
+      setState(() => _partageJournal = !valeur);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mise à jour du partage impossible.'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,18 +191,18 @@ class EnfantDetailScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: color.withOpacity(0.3)),
+                    border: Border.all(color: color.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         width: 70, height: 70,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.2),
+                          color: color.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: color.withOpacity(0.5), width: 2),
+                          border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
                         ),
                         child: Center(child: Text(emoji, style: const TextStyle(fontSize: 36))),
                       ),
@@ -121,9 +237,9 @@ class EnfantDetailScreen extends StatelessWidget {
                         child: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.danger.withOpacity(0.1),
+                            color: AppColors.danger.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.danger.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                           ),
                           child: const Icon(Icons.delete_outline_rounded,
                               color: AppColors.danger, size: 18),
@@ -133,7 +249,9 @@ class EnfantDetailScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 18),
+                _buildPartageCard(),
+                const SizedBox(height: 22),
                 const Text('Modules',
                     style: TextStyle(color: AppColors.textPrimary,
                         fontSize: 16, fontWeight: FontWeight.w700)),
@@ -145,8 +263,35 @@ class EnfantDetailScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.15,
                   children: [
+                    _ModuleCard(
+                      emoji: '📊',
+                      title: 'Tableau de bord',
+                      subtitle: 'Vue d\'ensemble',
+                      color: const Color(0xFF4DAAFF),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => TableauBordScreen(enfant: enfant),
+                      )),
+                    ),
+                    _ModuleCard(
+                      emoji: '📝',
+                      title: 'Journal santé',
+                      subtitle: 'Symptômes du jour',
+                      color: const Color(0xFF00C9A7),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => JournalSymptomesScreen(enfant: enfant),
+                      )),
+                    ),
+                    _ModuleCard(
+                      emoji: '🩺',
+                      title: 'Consultation',
+                      subtitle: 'Résumé & historique',
+                      color: const Color(0xFFE67E22),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => ConsultationScreen(enfant: enfant),
+                      )),
+                    ),
                     _ModuleCard(
                       emoji: '💉',
                       title: 'Vaccination',
@@ -186,17 +331,31 @@ class EnfantDetailScreen extends StatelessWidget {
                       )),
                     ),
                     _ModuleCard(
-                      emoji: '📋',
-                      title: 'Carnet',
-                      subtitle: 'Dossier médical',
-                      color: const Color(0xFFE67E22),
-                      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Module en cours de développement...'),
-                          backgroundColor: AppColors.primary,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      ),
+                      emoji: '💊',
+                      title: 'PediPharma',
+                      subtitle: 'Traitements & prises',
+                      color: const Color(0xFF9B59B6),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => PediPharmaScreen(enfant: enfant),
+                      )),
+                    ),
+                    _ModuleCard(
+                      emoji: '🥗',
+                      title: 'Nutrition',
+                      subtitle: 'Repas, allergies, recettes',
+                      color: const Color(0xFF2ECC71),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => NutritionScreen(enfant: enfant),
+                      )),
+                    ),
+                    _ModuleCard(
+                      emoji: '🤖',
+                      title: 'Assistant IA',
+                      subtitle: 'Questions santé',
+                      color: const Color(0xFF4285F4),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => AssistantScreen(enfant: enfant),
+                      )),
                     ),
                   ],
                 ),
@@ -204,6 +363,82 @@ class EnfantDetailScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPartageCard() {
+    // Détermine le libellé selon l'état actuel
+    String libellePartage() {
+      if (!_partageJournal) return 'Partager le dossier avec un pédiatre';
+      if (_pediatreSelectionne != null && _pediatreSelectionne!.isNotEmpty) {
+        // Trouver le nom du pédiatre sélectionné
+        final p = _pediatres.firstWhere(
+          (e) => e.id == _pediatreSelectionne,
+          orElse: () => PediatreModel(id: '', name: 'Pédiatre inconnu', email: ''),
+        );
+        return 'Dossier partagé avec le Dr. ${p.name}';
+      }
+      return 'Partage activé sans pédiatre';
+    }
+
+    String sousTitre() {
+      if (!_partageJournal) {
+        return 'Le pédiatre choisi pourra lire le journal de santé et les '
+            'résumés, prescrire les traitements et gérer la nutrition.';
+      }
+      if (_pediatreSelectionne != null && _pediatreSelectionne!.isNotEmpty) {
+        return 'Il lit le journal de santé et les résumés, prescrit les '
+            'traitements et gère la nutrition. Désactivez pour retirer l\'accès.';
+      }
+      return 'Aucun pédiatre n\'y a accès : désactivez puis réactivez pour en choisir un.';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF00C9A7).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF00C9A7).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF00C9A7).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Text('🩺', style: TextStyle(fontSize: 20)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(libellePartage(),
+                    style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 3),
+                Text(
+                  sousTitre(),
+                  style: TextStyle(
+                      color: AppColors.textSecondary, fontSize: 10.5, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _partageJournal,
+            activeThumbColor: const Color(0xFF00C9A7),
+            onChanged: _basculerPartage,
+          ),
+        ],
       ),
     );
   }
@@ -261,9 +496,9 @@ class _ModuleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +507,7 @@ class _ModuleCard extends StatelessWidget {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Center(child: Text(emoji, style: const TextStyle(fontSize: 22))),

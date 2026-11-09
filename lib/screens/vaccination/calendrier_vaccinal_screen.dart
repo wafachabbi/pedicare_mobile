@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/vaccin_model.dart';
 import '../../models/enfant_model.dart';
 import '../../services/vaccin_service.dart';
 import '../../services/calendrier_vaccinal_service.dart';
@@ -18,7 +17,6 @@ class CalendrierVaccinalScreen extends StatefulWidget {
 class _CalendrierVaccinalScreenState extends State<CalendrierVaccinalScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<VaccinModel> _vaccinsAdministres = [];
   List<VaccinStatut> _calendrier = [];
   bool _loading = true;
 
@@ -46,7 +44,6 @@ class _CalendrierVaccinalScreenState extends State<CalendrierVaccinalScreen>
     );
     if (mounted) {
       setState(() {
-        _vaccinsAdministres = vaccins;
         _calendrier = calendrier;
         _loading = false;
       });
@@ -353,7 +350,7 @@ class _VaccinCard extends StatelessWidget {
         color: AppColors.inputFill,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: _color.withOpacity(0.4), width: 1.2),
+            color: _color.withValues(alpha: 0.4), width: 1.2),
       ),
       child: Column(
         children: [
@@ -362,7 +359,7 @@ class _VaccinCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: _color.withOpacity(0.1),
+              color: _color.withValues(alpha: 0.1),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
             ),
@@ -372,7 +369,7 @@ class _VaccinCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _color.withOpacity(0.2),
+                    color: _color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(p.ageLabel,
@@ -401,7 +398,7 @@ class _VaccinCard extends StatelessWidget {
                     Container(
                       width: 42, height: 42,
                       decoration: BoxDecoration(
-                        color: _color.withOpacity(0.15),
+                        color: _color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
@@ -440,7 +437,7 @@ class _VaccinCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00C9A7).withOpacity(0.1),
+                      color: const Color(0xFF00C9A7).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(

@@ -200,7 +200,7 @@ class _IACroissanceScreenState extends State<IACroissanceScreen> {
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [BoxShadow(
-            color: color.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 6))],
+            color: color.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,9 +314,9 @@ class _IACroissanceScreenState extends State<IACroissanceScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.danger.withOpacity(0.08),
+        color: AppColors.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,11 +336,11 @@ class _IACroissanceScreenState extends State<IACroissanceScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: (alerte.gravite == GraviteAlerte.elevee
-                  ? AppColors.danger : const Color(0xFFE67E22)).withOpacity(0.1),
+                  ? AppColors.danger : const Color(0xFFE67E22)).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: (alerte.gravite == GraviteAlerte.elevee
-                    ? AppColors.danger : const Color(0xFFE67E22)).withOpacity(0.3),
+                    ? AppColors.danger : const Color(0xFFE67E22)).withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -398,9 +398,9 @@ class _IACroissanceScreenState extends State<IACroissanceScreen> {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE67E22).withOpacity(0.1),
+                  color: const Color(0xFFE67E22).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE67E22).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFFE67E22).withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   children: [
@@ -481,7 +481,7 @@ class _PercentileBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
           child: LinearProgressIndicator(
             value: percentile / 100,
-            backgroundColor: color.withOpacity(0.15),
+            backgroundColor: color.withValues(alpha: 0.15),
             valueColor: AlwaysStoppedAnimation<Color>(
                 percentile < 3 || percentile > 97 ? AppColors.danger : color),
             minHeight: 8,
@@ -554,9 +554,9 @@ class _TendanceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.1),
+        color: _color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _color.withOpacity(0.3)),
+        border: Border.all(color: _color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [

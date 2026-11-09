@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/enfant_model.dart';
 import '../models/rendezvous_model.dart';
 import '../services/auth_service.dart';
+import '../services/enfant_service.dart';
 import '../services/rendezvous_service.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
+import 'pediatre/journaux_partages_screen.dart';
 import 'rendezvous/calendrier_pediatre_screen.dart';
 
 class HomePediatreScreen extends StatefulWidget {
@@ -16,6 +19,7 @@ class HomePediatreScreen extends StatefulWidget {
 
 class _HomePediatreScreenState extends State<HomePediatreScreen> {
   List<RendezVousModel> _rdvs = [];
+  List<EnfantModel> _partages = [];
   bool _loading = true;
 
   @override
@@ -28,7 +32,14 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
     setState(() => _loading = true);
     final id = (widget.user['id'] ?? widget.user['uid'] ?? '').toString();
     final rdvs = await RendezVousService.getRendezVousPediatre(id);
-    if (mounted) setState(() { _rdvs = rdvs; _loading = false; });
+    final partages = await EnfantService.getEnfantsPartages(id);
+    if (mounted) {
+      setState(() {
+        _rdvs = rdvs;
+        _partages = partages;
+        _loading = false;
+      });
+    }
   }
 
   List<RendezVousModel> get _prochains {
@@ -75,6 +86,8 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
                   const SizedBox(height: 24),
                   _buildStatsRow(),
                   const SizedBox(height: 24),
+                  _buildPartages(context),
+                  const SizedBox(height: 24),
                   _buildSectionTitle('Prochains rendez-vous'),
                   const SizedBox(height: 14),
                   _loading
@@ -115,9 +128,9 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C9A7).withOpacity(0.2),
+              color: const Color(0xFF00C9A7).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF00C9A7).withOpacity(0.5)),
+              border: Border.all(color: const Color(0xFF00C9A7).withValues(alpha: 0.5)),
             ),
             child: const Text('PRO',
                 style: TextStyle(color: Color(0xFF00C9A7),
@@ -143,9 +156,9 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
             child: Container(
               width: 38, height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF00C9A7).withOpacity(0.2),
+                color: const Color(0xFF00C9A7).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: const Color(0xFF00C9A7).withOpacity(0.5)),
+                border: Border.all(color: const Color(0xFF00C9A7).withValues(alpha: 0.5)),
               ),
               child: Center(child: Text(initials,
                   style: const TextStyle(color: Color(0xFF00C9A7),
@@ -245,6 +258,85 @@ class _HomePediatreScreenState extends State<HomePediatreScreen> {
       _StatCard(value: '${_enAttente.length}', label: 'En attente',
           emoji: '⏳', color: const Color(0xFFE67E22)),
     ]);
+  }
+
+  // ── Journaux partagés ─────────────────────────────────────────────────────
+  Widget _buildPartages(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => JournauxPartagesScreen(
+                pediatreId: (widget.user['id'] ?? widget.user['uid'] ?? '').toString(),
+                pediatreNom: (widget.user['name'] ?? '').toString())),
+      ).then((_) => _loadRDVs()),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF00C9A7).withValues(alpha: 0.16),
+              AppColors.inputFill,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF00C9A7).withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C9A7).withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Center(
+                child: Text('📝', style: TextStyle(fontSize: 22)),
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Dossiers partagés',
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(
+                    _partages.isEmpty
+                        ? 'Aucun parent n\'a encore partagé de dossier'
+                        : '${_partages.length} enfant${_partages.length > 1 ? 's' : ''} suivi${_partages.length > 1 ? 's' : ''} : prescriptions, nutrition, journal',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C9A7).withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('${_partages.length}',
+                  style: const TextStyle(
+                      color: Color(0xFF00C9A7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800)),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary, size: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   // ── Prochains RDV ─────────────────────────────────────────────────────────
@@ -384,7 +476,7 @@ class _RDVPediatreTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF00C9A7).withOpacity(0.15),
+                color: const Color(0xFF00C9A7).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(rdv.type == 'video' ? '🎥' : '👶',
@@ -410,9 +502,9 @@ class _RDVPediatreTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statutColor.withOpacity(0.15),
+                  color: _statutColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _statutColor.withOpacity(0.4)),
+                  border: Border.all(color: _statutColor.withValues(alpha: 0.4)),
                 ),
                 child: Text(_statutLabel,
                     style: TextStyle(color: _statutColor,
@@ -428,7 +520,7 @@ class _RDVPediatreTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E6FDB).withOpacity(0.08),
+              color: const Color(0xFF1E6FDB).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(children: [
@@ -477,9 +569,9 @@ class _RDVPediatreTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, color: color, size: 13),
@@ -516,9 +608,9 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(children: [
           Text(emoji, style: const TextStyle(fontSize: 20)),
