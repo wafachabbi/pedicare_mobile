@@ -165,9 +165,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.danger.withOpacity(0.15),
+                color: AppColors.danger.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
               ),
               child: Text('${_notifs.length}',
                   style: const TextStyle(color: AppColors.danger,
@@ -214,16 +214,16 @@ class _NotifTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: notif.color.withOpacity(0.08),
+        color: notif.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: notif.color.withOpacity(0.25)),
+        border: Border.all(color: notif.color.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
             width: 46, height: 46,
             decoration: BoxDecoration(
-              color: notif.color.withOpacity(0.15),
+              color: notif.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(13),
             ),
             child: Center(child: Text(notif.emoji, style: const TextStyle(fontSize: 22))),
@@ -245,7 +245,7 @@ class _NotifTile extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E6FDB).withOpacity(0.2),
+                        color: const Color(0xFF1E6FDB).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text('👶 ${notif.enfantNom}',
@@ -263,9 +263,9 @@ class _NotifTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
             decoration: BoxDecoration(
-              color: notif.color.withOpacity(0.15),
+              color: notif.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: notif.color.withOpacity(0.4)),
+              border: Border.all(color: notif.color.withValues(alpha: 0.4)),
             ),
             child: Text(label,
                 style: TextStyle(color: notif.color,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/enfant_model.dart';
-import '../../models/vaccin_model.dart';
 import '../../services/vaccin_service.dart';
 import '../../services/ia_vaccination_service.dart';
 import '../../theme/app_colors.dart';
@@ -202,7 +201,7 @@ class _IAVaccinationScreenState extends State<IAVaccinationScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: (estAJour ? const Color(0xFF00C9A7) : const Color(0xFF1565C0)).withOpacity(0.3),
+            color: (estAJour ? const Color(0xFF00C9A7) : const Color(0xFF1565C0)).withValues(alpha: 0.3),
             blurRadius: 16, offset: const Offset(0, 6),
           )
         ],
@@ -330,9 +329,9 @@ class _IAVaccinationScreenState extends State<IAVaccinationScreen> {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE67E22).withOpacity(0.1),
+                  color: const Color(0xFFE67E22).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE67E22).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFFE67E22).withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   children: [
@@ -415,14 +414,14 @@ class _SuggestionCardState extends State<_SuggestionCard> {
         decoration: BoxDecoration(
           color: AppColors.inputFill,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _color.withOpacity(0.4), width: 1.2),
+          border: Border.all(color: _color.withValues(alpha: 0.4), width: 1.2),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: _color.withOpacity(0.08),
+                color: _color.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.vertical(
                   top: const Radius.circular(16),
                   bottom: _expanded ? Radius.zero : const Radius.circular(16),
@@ -441,7 +440,7 @@ class _SuggestionCardState extends State<_SuggestionCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _color.withOpacity(0.15),
+                        color: _color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text('${s.retardJours}j',

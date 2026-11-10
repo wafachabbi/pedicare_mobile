@@ -1,6 +1,6 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/vaccin_model.dart';
 import 'calendrier_vaccinal_service.dart';
+import 'gemini_service.dart';
 
 /// Niveau de priorité de la suggestion IA
 enum PrioriteIA { urgente, haute, normale, future }
@@ -46,10 +46,6 @@ class AnalyseVaccinaleIA {
 }
 
 class IAVaccinationService {
-  // ⚠️  Remplace cette valeur par ta clé API Google AI Studio
-  // https://aistudio.google.com/app/apikey  (gratuit)
-  static const String _apiKey = 'GEMINI_API_KEY';
-
   /// Analyse + appel Gemini
   static Future<AnalyseVaccinaleIA> analyser({
     required DateTime dateNaissance,
@@ -156,34 +152,24 @@ class IAVaccinationService {
     required List<SuggestionVaccin> prochaines,
     required double score,
   }) async {
-    if (_apiKey == 'GEMINI_API_KEY') {
+    if (!GeminiService.configuree) {
       return (_fallbackResume(prenom, sexe, ageMois, urgentes, prochaines, score), false);
     }
 
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: _apiKey,
-        generationConfig: GenerationConfig(
-          temperature: 0.7,
-          maxOutputTokens: 400,
-        ),
-      );
+    final ageStr = ageMois < 24 ? '$ageMois mois' : '${(ageMois / 12).floor()} ans';
+    final pronon = sexe == 'F' ? 'elle' : 'il';
+    final vaccinsStr = vaccinsAdministres.isEmpty
+        ? 'aucun vaccin enregistré'
+        : vaccinsAdministres.map((v) => v.nom).join(', ');
+    final urgentesStr = urgentes.isEmpty
+        ? 'aucun vaccin urgent'
+        : urgentes.map((s) => '${s.programme.nom} (${s.programme.maladie})').join(', ');
+    final prochainesStr = prochaines.isEmpty
+        ? 'aucun vaccin prévu dans les 3 mois'
+        : prochaines.map((s) => '${s.programme.nom} (${s.programme.maladie})').join(', ');
+    final pct = (score * 100).round();
 
-      final ageStr = ageMois < 24 ? '$ageMois mois' : '${(ageMois / 12).floor()} ans';
-      final pronon = sexe == 'F' ? 'elle' : 'il';
-      final vaccinsStr = vaccinsAdministres.isEmpty
-          ? 'aucun vaccin enregistré'
-          : vaccinsAdministres.map((v) => v.nom).join(', ');
-      final urgentesStr = urgentes.isEmpty
-          ? 'aucun vaccin urgent'
-          : urgentes.map((s) => '${s.programme.nom} (${s.programme.maladie})').join(', ');
-      final prochainesStr = prochaines.isEmpty
-          ? 'aucun vaccin prévu dans les 3 mois'
-          : prochaines.map((s) => '${s.programme.nom} (${s.programme.maladie})').join(', ');
-      final pct = (score * 100).round();
-
-      final prompt = '''
+    final prompt = '''
 Tu es un assistant pédiatrique intelligent de l'application PediCare.
 Génère un résumé personnalisé et bienveillant en français pour les parents de $prenom.
 
@@ -206,15 +192,15 @@ Instructions :
 - Utilise "il" ou "elle" selon le sexe ($pronon)
 ''';
 
-      final response = await model.generateContent([Content.text(prompt)]);
-      final text = response.text?.trim() ?? '';
-      if (text.isEmpty) {
-        return (_fallbackResume(prenom, sexe, ageMois, urgentes, prochaines, score), false);
-      }
-      return (text, true);
-    } catch (e) {
+    final text = await GeminiService.generer(
+      prompt: prompt,
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+    );
+    if (text == null) {
       return (_fallbackResume(prenom, sexe, ageMois, urgentes, prochaines, score), false);
     }
+    return (text, true);
   }
 
   // ── Résumé de secours (si pas de clé ou erreur réseau) ────────────────────

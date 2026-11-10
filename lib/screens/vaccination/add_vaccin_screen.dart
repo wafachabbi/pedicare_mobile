@@ -380,7 +380,7 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: selected
-                  ? const Color(0xFF00C9A7).withOpacity(0.1)
+                  ? const Color(0xFF00C9A7).withValues(alpha: 0.1)
                   : AppColors.inputFill,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
@@ -392,7 +392,7 @@ class _AddVaccinScreenState extends State<AddVaccinScreen> {
               Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00C9A7).withOpacity(0.15),
+                  color: const Color(0xFF00C9A7).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(child: Text('👨‍⚕️', style: TextStyle(fontSize: 20))),

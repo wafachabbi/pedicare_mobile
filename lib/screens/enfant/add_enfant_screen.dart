@@ -194,7 +194,7 @@ class _AddEnfantScreenState extends State<AddEnfantScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: _groupeSanguin == g
-                                  ? AppColors.primary.withOpacity(0.3)
+                                  ? AppColors.primary.withValues(alpha: 0.3)
                                   : AppColors.inputFill,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
@@ -309,7 +309,7 @@ class _SexeBtn extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? color.withOpacity(0.15) : AppColors.inputFill,
+            color: selected ? color.withValues(alpha: 0.15) : AppColors.inputFill,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: selected ? color : AppColors.glassBorder,
                 width: selected ? 1.5 : 1),

@@ -371,7 +371,7 @@ class _RDVTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E6FDB).withOpacity(0.15),
+                  color: const Color(0xFF1E6FDB).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(rdv.type == 'video' ? '🎥' : '🏥',
@@ -396,9 +396,9 @@ class _RDVTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statutColor.withOpacity(0.15),
+                  color: _statutColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _statutColor.withOpacity(0.4)),
+                  border: Border.all(color: _statutColor.withValues(alpha: 0.4)),
                 ),
                 child: Text(_statutLabel,
                     style: TextStyle(
@@ -412,7 +412,7 @@ class _RDVTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E6FDB).withOpacity(0.08),
+              color: const Color(0xFF1E6FDB).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -490,9 +490,9 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

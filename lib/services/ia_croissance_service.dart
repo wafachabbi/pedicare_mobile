@@ -1,5 +1,5 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/croissance_model.dart';
+import 'gemini_service.dart';
 import 'percentile_service.dart';
 
 class AnalyseCroissanceIA {
@@ -28,8 +28,6 @@ class AnalyseCroissanceIA {
 }
 
 class IACroissanceService {
-  static const String _apiKey = 'GEMINI_API_KEY';
-
   static Future<AnalyseCroissanceIA> analyser({
     required List<CroissanceModel> mesures,
     required String prenomEnfant,
@@ -102,30 +100,23 @@ class IACroissanceService {
     required String tendancePoids,
     required String tendanceTaille,
   }) async {
-    if (_apiKey == 'GEMINI_API_KEY') {
+    if (!GeminiService.configuree) {
       return (_fallback(prenom, sexe, ageMois, alertes, pctPoids, pctTaille), false);
     }
 
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
-        apiKey: _apiKey,
-        generationConfig: GenerationConfig(temperature: 0.6, maxOutputTokens: 500),
-      );
+    final ageStr = ageMois < 24 ? '$ageMois mois' : '${(ageMois / 12).floor()} ans';
+    final il = sexe == 'F' ? 'elle' : 'il';
+    final derniere = mesures.last;
 
-      final ageStr = ageMois < 24 ? '$ageMois mois' : '${(ageMois / 12).floor()} ans';
-      final il = sexe == 'F' ? 'elle' : 'il';
-      final derniere = mesures.last;
+    final historiqueStr = mesures.take(5).map((m) =>
+      '${_fmtDate(m.date)}: poids=${m.poids}kg, taille=${m.taille}cm, IMC=${m.imc.toStringAsFixed(1)}'
+    ).join(' | ');
 
-      final historiqueStr = mesures.take(5).map((m) =>
-        '${_fmtDate(m.date)}: poids=${m.poids}kg, taille=${m.taille}cm, IMC=${m.imc.toStringAsFixed(1)}'
-      ).join(' | ');
+    final alertesStr = alertes.isEmpty
+        ? 'aucune anomalie détectée'
+        : alertes.map((a) => a.message).join('; ');
 
-      final alertesStr = alertes.isEmpty
-          ? 'aucune anomalie détectée'
-          : alertes.map((a) => a.message).join('; ');
-
-      final prompt = '''
+    final prompt = '''
 Tu es un assistant pédiatrique IA de l'application PediCare spécialisé en croissance infantile.
 Analyse les données de croissance de $prenom et génère un rapport médical personnalisé en français pour les parents.
 
@@ -147,18 +138,20 @@ Instructions :
 - Explique ce que signifient les percentiles de façon simple
 - Si anomalie : explique la cause possible et quand consulter
 - Si tout va bien : rassure les parents
-- Donne un conseil nutritionnel ou de suivi adapté à l\'âge
+- Donne un conseil nutritionnel ou de suivi adapté à l'âge
 - Utilise "$il" selon le sexe, et le prénom $prenom
 - Texte pur, sans markdown, sans listes
 ''';
 
-      final response = await model.generateContent([Content.text(prompt)]);
-      final text = response.text?.trim() ?? '';
-      if (text.isEmpty) return (_fallback(prenom, sexe, ageMois, alertes, pctPoids, pctTaille), false);
-      return (text, true);
-    } catch (_) {
+    final text = await GeminiService.generer(
+      prompt: prompt,
+      temperature: 0.6,
+      maxOutputTokens: 1024,
+    );
+    if (text == null) {
       return (_fallback(prenom, sexe, ageMois, alertes, pctPoids, pctTaille), false);
     }
+    return (text, true);
   }
 
   static String _fallback(String prenom, String sexe, int ageMois,

@@ -180,12 +180,12 @@ class VaccinDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: urgent
-            ? const Color(0xFFE67E22).withOpacity(0.12)
-            : const Color(0xFF1E6FDB).withOpacity(0.12),
+            ? const Color(0xFFE67E22).withValues(alpha: 0.12)
+            : const Color(0xFF1E6FDB).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: urgent
-              ? const Color(0xFFE67E22).withOpacity(0.4)
+              ? const Color(0xFFE67E22).withValues(alpha: 0.4)
               : AppColors.glassBorder,
         ),
       ),
@@ -242,9 +242,9 @@ class VaccinDetailScreen extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.danger.withOpacity(0.12),
+          color: AppColors.danger.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+          border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -78,8 +78,8 @@ class _LoginScreenState extends State<LoginScreen>
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, anim, __) => destination,
-            transitionsBuilder: (_, anim, __, child) =>
+            pageBuilder: (_, anim, _) => destination,
+            transitionsBuilder: (_, anim, _, child) =>
                 FadeTransition(opacity: anim, child: child),
           ),
         );
@@ -332,8 +332,8 @@ class _LoginScreenState extends State<LoginScreen>
           onTap: () => Navigator.push(
             context,
             PageRouteBuilder(
-              pageBuilder: (_, anim, __) => const SignupScreen(),
-              transitionsBuilder: (_, anim, __, child) => SlideTransition(
+              pageBuilder: (_, anim, _) => const SignupScreen(),
+              transitionsBuilder: (_, anim, _, child) => SlideTransition(
                 position: Tween<Offset>(
                   begin: const Offset(1, 0),
                   end: Offset.zero,

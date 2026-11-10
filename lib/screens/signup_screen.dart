@@ -3,7 +3,6 @@ import '../theme/app_colors.dart';
 import '../widgets/glass_text_field.dart';
 import '../widgets/gradient_button.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
