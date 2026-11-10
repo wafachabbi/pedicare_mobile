@@ -8,7 +8,6 @@ import 'add_vaccin_screen.dart';
 import 'vaccin_detail_screen.dart';
 import 'calendrier_vaccinal_screen.dart';
 import 'ia_vaccination_screen.dart';
-import '../rendezvous/rendezvous_screen.dart';
 
 class VaccinationScreen extends StatefulWidget {
   final String enfantId;
@@ -200,60 +199,6 @@ class _VaccinationScreenState extends State<VaccinationScreen>
     );
   }
 
-  Widget _buildRDVButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RendezVousScreen(
-            enfantId: widget.enfantId,
-            enfantNom: widget.enfantNom,
-          ),
-        ),
-      ),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E6FDB), Color(0xFF4DAAFF)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-                color: Color(0x441E6FDB),
-                blurRadius: 12,
-                offset: Offset(0, 4))
-          ],
-        ),
-        child: const Row(
-          children: [
-            Text('📅', style: TextStyle(fontSize: 22)),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Rendez-vous médicaux',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14)),
-                  Text('Gérer les consultations',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white70, size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -413,7 +358,7 @@ class _VaccinTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF00C9A7).withOpacity(0.15),
+                color: const Color(0xFF00C9A7).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
@@ -469,12 +414,12 @@ class _EcheanceTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: urgent
-            ? const Color(0xFFE67E22).withOpacity(0.1)
+            ? const Color(0xFFE67E22).withValues(alpha: 0.1)
             : AppColors.inputFill,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: urgent
-              ? const Color(0xFFE67E22).withOpacity(0.4)
+              ? const Color(0xFFE67E22).withValues(alpha: 0.4)
               : AppColors.glassBorder,
         ),
       ),
@@ -502,8 +447,8 @@ class _EcheanceTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: urgent
-                  ? const Color(0xFFE67E22).withOpacity(0.15)
-                  : const Color(0xFF1E6FDB).withOpacity(0.15),
+                  ? const Color(0xFFE67E22).withValues(alpha: 0.15)
+                  : const Color(0xFF1E6FDB).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -540,9 +485,9 @@ class _StatChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [

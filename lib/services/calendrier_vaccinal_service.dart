@@ -193,9 +193,10 @@ class CalendrierVaccinalService {
       } else {
         // Trop vieux pour ce vaccin (> max + 6 mois de grâce)
         // Si l'enfant n'a pas eu le vaccin et est trop vieux,
-        // on marque quand même en retard pour alerter
-        statut = ageMois > programme.ageMoisMax + 12
-            ? StatutVaccin.enRetard
+        // on marque "à venir" car le vaccin n'est plus dans la fenêtre d'âge recommandée
+        // Si l'enfant est dans la fenêtre de grâce (max + 6), on marque enRetard
+        statut = ageMois > programme.ageMoisMax + 6
+            ? StatutVaccin.aVenir
             : StatutVaccin.enRetard;
       }
 

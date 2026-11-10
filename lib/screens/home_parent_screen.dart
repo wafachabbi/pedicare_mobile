@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import '../models/enfant_model.dart';
 import '../services/auth_service.dart';
 import '../services/enfant_service.dart';
+import '../services/notification_service.dart';
 import '../services/vaccin_service.dart';
 import '../services/rendezvous_service.dart';
+import '../services/traitement_service.dart';
 import '../theme/app_colors.dart';
 import 'login_screen.dart';
+import 'dashboard/tableau_bord_screen.dart';
 import 'enfant/add_enfant_screen.dart';
 import 'enfant/enfant_detail_screen.dart';
 import 'notifications_screen.dart';
@@ -40,6 +43,11 @@ class _HomeParentScreenState extends State<HomeParentScreen> {
         _loading = false;
       });
       _loadNotifCount(enfants);
+      NotificationService.planifierRappelsJournalEnfants(enfants);
+      // PediPharma : rappels à jour, ceux des traitements terminés annulés.
+      for (final e in enfants) {
+        TraitementService.synchroniserRappels(e.id, enfantPrenom: e.prenom);
+      }
     }
   }
 
@@ -224,7 +232,16 @@ class _HomeParentScreenState extends State<HomeParentScreen> {
                                   ));
                                   _loadEnfants();
                                 },
+                                onDashboard: () async {
+                                  await Navigator.push(context, MaterialPageRoute(
+                                    builder: (_) => TableauBordScreen(enfant: enfant),
+                                  ));
+                                  _loadEnfants();
+                                },
                                 onDelete: () async {
+                                  await NotificationService
+                                      .annulerRappelJournalQuotidien(
+                                          enfantId: enfant.id);
                                   await EnfantService.deleteEnfant(enfant.id);
                                   _loadEnfants();
                                 },
@@ -326,20 +343,6 @@ class _HomeParentScreenState extends State<HomeParentScreen> {
     );
   }
 
-  Widget _iconBtn(IconData icon, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38, height: 38,
-        decoration: BoxDecoration(
-          color: AppColors.inputFill,
-          borderRadius: BorderRadius.circular(11),
-          border: Border.all(color: AppColors.glassBorder),
-        ),
-        child: Icon(icon, color: AppColors.textPrimary, size: 18),
-      ),
-    );
-  }
 
   void _logout(BuildContext context) {
     showDialog(
@@ -379,11 +382,13 @@ class _EnfantCard extends StatelessWidget {
   final EnfantModel enfant;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onDashboard;
 
   const _EnfantCard({
     required this.enfant,
     required this.onTap,
     required this.onDelete,
+    required this.onDashboard,
   });
 
   @override
@@ -398,18 +403,18 @@ class _EnfantCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Row(
           children: [
             Container(
               width: 56, height: 56,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: color.withOpacity(0.4), width: 2),
+                border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
               ),
               child: Center(child: Text(emoji, style: const TextStyle(fontSize: 28))),
             ),
@@ -435,19 +440,33 @@ class _EnfantCard extends StatelessWidget {
             Row(
               children: [
                 GestureDetector(
+                  onTap: onDashboard,
+                  child: Container(
+                    width: 34, height: 34,
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+                    ),
+                    child: const Icon(Icons.dashboard_outlined,
+                        color: AppColors.secondary, size: 17),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
                   onTap: () => _confirmDelete(context),
                   child: Container(
                     width: 34, height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.danger.withOpacity(0.1),
+                      color: AppColors.danger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.danger.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                     ),
                     child: const Icon(Icons.delete_outline_rounded,
                         color: AppColors.danger, size: 17),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Container(
                   width: 34, height: 34,
                   decoration: BoxDecoration(

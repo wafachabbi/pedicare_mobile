@@ -128,14 +128,14 @@ class _EnfantsScreenState extends State<EnfantsScreen> {
               margin: const EdgeInsets.only(right: 12, bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? color.withOpacity(0.2) : AppColors.inputFill,
+                color: selected ? color.withValues(alpha: 0.2) : AppColors.inputFill,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: selected ? color : AppColors.glassBorder,
                   width: selected ? 2 : 1,
                 ),
                 boxShadow: selected
-                    ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                    ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
                     : [],
               ),
               child: Column(
@@ -173,18 +173,18 @@ class _EnfantsScreenState extends State<EnfantsScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: color.withOpacity(0.3)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
                 Container(
                   width: 64, height: 64,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: color.withOpacity(0.4), width: 2),
+                    border: Border.all(color: color.withValues(alpha: 0.4), width: 2),
                   ),
                   child: Center(child: Text(emoji, style: const TextStyle(fontSize: 32))),
                 ),
@@ -219,9 +219,9 @@ class _EnfantsScreenState extends State<EnfantsScreen> {
                   child: Container(
                     width: 34, height: 34,
                     decoration: BoxDecoration(
-                      color: AppColors.danger.withOpacity(0.1),
+                      color: AppColors.danger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.danger.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                     ),
                     child: Icon(Icons.delete_outline_rounded, color: AppColors.danger, size: 17),
                   ),
@@ -398,9 +398,9 @@ class _ModuleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,7 +409,7 @@ class _ModuleCard extends StatelessWidget {
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),

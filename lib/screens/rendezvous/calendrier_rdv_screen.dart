@@ -145,10 +145,10 @@ class _CalendrierRdvScreenState extends State<CalendrierRdvScreen> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E6FDB).withOpacity(0.15),
+              color: const Color(0xFF1E6FDB).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: const Color(0xFF1E6FDB).withOpacity(0.3)),
+                  color: const Color(0xFF1E6FDB).withValues(alpha: 0.3)),
             ),
             child: Text(
               '${_rdvs.where((r) => r.dateHeure.isAfter(DateTime.now()) && r.statut != StatutRDV.annule).length} à venir',
@@ -208,7 +208,7 @@ class _CalendrierRdvScreenState extends State<CalendrierRdvScreen> {
               color: Colors.white, fontWeight: FontWeight.w700),
           // Aujourd'hui
           todayDecoration: BoxDecoration(
-            color: const Color(0xFF1E6FDB).withOpacity(0.25),
+            color: const Color(0xFF1E6FDB).withValues(alpha: 0.25),
             shape: BoxShape.circle,
           ),
           todayTextStyle: const TextStyle(
@@ -322,7 +322,7 @@ class _CalendrierRdvScreenState extends State<CalendrierRdvScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E6FDB).withOpacity(0.15),
+                color: const Color(0xFF1E6FDB).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -514,7 +514,7 @@ class _RdvCard extends StatelessWidget {
         color: AppColors.inputFill,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _statutColor.withOpacity(0.35),
+          color: _statutColor.withValues(alpha: 0.35),
           width: 1.2,
         ),
       ),
@@ -525,7 +525,7 @@ class _RdvCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: _statutColor.withOpacity(0.1),
+              color: _statutColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16)),
             ),
@@ -546,10 +546,10 @@ class _RdvCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _statutColor.withOpacity(0.15),
+                    color: _statutColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: _statutColor.withOpacity(0.4)),
+                        color: _statutColor.withValues(alpha: 0.4)),
                   ),
                   child: Text(_statutLabel,
                       style: TextStyle(
@@ -675,9 +675,9 @@ class _Btn extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

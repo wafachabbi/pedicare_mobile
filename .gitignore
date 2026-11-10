@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Clé API Gemini locale (ne pas partager)
+gemini.local.json
+bash.exe.stackdump
+android/build/

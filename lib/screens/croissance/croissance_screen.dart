@@ -149,9 +149,9 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
               child: Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9B59B6).withOpacity(0.2),
+                  color: const Color(0xFF9B59B6).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF9B59B6).withOpacity(0.4)),
+                  border: Border.all(color: const Color(0xFF9B59B6).withValues(alpha: 0.4)),
                 ),
                 child: const Icon(Icons.show_chart_rounded, color: Color(0xFF9B59B6), size: 18),
               ),
@@ -201,9 +201,9 @@ class _CroissanceScreenState extends State<CroissanceScreen> {
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.danger.withOpacity(0.1),
+        color: AppColors.danger.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +410,7 @@ class _MesureTile extends StatelessWidget {
               Container(
                 width: 42, height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF9B59B6).withOpacity(0.15),
+                  color: const Color(0xFF9B59B6).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(child: Text('📏', style: TextStyle(fontSize: 20))),
@@ -498,9 +498,9 @@ class _StatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text('$label: $value',
           style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
@@ -522,9 +522,9 @@ class _ActionBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,24 @@ import 'package:path/path.dart';
 class DatabaseService {
   static Database? _db;
 
+  /// Version 4 : partage du journal des symptômes avec le pédiatre.
+  /// Version 2 : ajout du journal des symptômes, des résumés de consultation
+  /// et des traitements (Module 3 & Module 10).
+  /// Version 4 : nouvelle colonne pediatre_id dans la table enfants
+  /// Version 5 : table journal_alimentaire pour Module 9
+  /// Version 6 : Module 5 (PediPharma) et Module 9 (Nutrition) :
+  ///   traitements.medecin / heures / rappels, journal_alimentaire.aliments,
+  ///   tables prises_medicament, allergies_alimentaires, allaitements.
+  /// Version 7 : table conseils_nutrition (consignes rédigées par le pédiatre).
+  /// Version 8 : assistant IA (tables conversations_ia, messages_ia).
+  /// Version 9 : RAG de l'assistant (cache rag_embeddings, sources citées).
+  /// Version 10 : Module 3 — observations saisies par le pédiatre pendant la
+  ///   consultation (table observations_consultation) et lien
+  ///   consultations.observation_id vers le résumé IA généré par le parent.
+  /// Version 11 : Module Éveil & Jeux (activites, seances_jeu, favoris,
+  ///   badges_enfant) et Module Communication (messages parent ↔ pédiatre).
+  static const int _version = 11;
+
   static Future<Database> get database async {
     _db ??= await _initDB();
     return _db!;
@@ -14,14 +32,82 @@ class DatabaseService {
     final path = join(dbPath, 'pedicare.db');
     return openDatabase(
       path,
-      version: 2, // v2 : ajout module Éveil + Messagerie (Arij)
+      version: _version,
+      onConfigure: _onConfigure,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
-  // ── Création complète (nouvelle installation) ─────────────────────────────
+  /// SQLite désactive les clés étrangères par défaut : sans ce PRAGMA,
+  /// les « ON DELETE CASCADE » sont ignorés et supprimer un enfant laisse
+  /// son journal, ses consultations, etc. orphelins.
+  static Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  /// Création de la base de données (première installation).
   static Future<void> _onCreate(Database db, int version) async {
+    await _createBaseTables(db);
+    await _createModuleTables(db);
+    await _createEveilCommunicationTables(db);
+  }
+
+  /// Migration non destructive pour les installations existantes.
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // On ajoute toujours les colonnes nécessaires, même si la version semble à jour
+    try {
+      await db.execute(
+        'ALTER TABLE enfants ADD COLUMN partage_journal INTEGER NOT NULL DEFAULT 0',
+      );
+    } catch (_) {
+      // Colonne déjà existante, c'est normal
+    }
+    try {
+      await db.execute(
+        'ALTER TABLE enfants ADD COLUMN pediatre_id TEXT',
+      );
+    } catch (_) {
+      // Colonne déjà existante, c'est normal
+    }
+    try {
+      await db.execute(
+        'ALTER TABLE enfants ADD COLUMN allergies TEXT',
+      );
+    } catch (_) {
+      // Colonne déjà existante, c'est normal
+    }
+    // Colonnes ajoutées en v6 (Modules 5 et 9).
+    for (final sql in const [
+      'ALTER TABLE traitements ADD COLUMN medecin TEXT',
+      'ALTER TABLE traitements ADD COLUMN heures TEXT',
+      'ALTER TABLE traitements ADD COLUMN rappels INTEGER NOT NULL DEFAULT 1',
+      'ALTER TABLE journal_alimentaire ADD COLUMN aliments TEXT',
+      'ALTER TABLE messages_ia ADD COLUMN sources TEXT',
+    ]) {
+      try {
+        await db.execute(sql);
+      } catch (_) {
+        // Colonne déjà existante ou table créée juste après : normal.
+      }
+    }
+    // Tables des modules 3, 5, 9 et 10 (journal_symptomes, consultations,
+    // traitements, journal_alimentaire) : toutes en IF NOT EXISTS, donc sans
+    // effet si elles existent déjà.
+    await _createModuleTables(db);
+    // v10 : lien entre un résumé IA et la consultation du pédiatre.
+    try {
+      await db.execute(
+          'ALTER TABLE consultations ADD COLUMN observation_id INTEGER');
+    } catch (_) {
+      // Colonne déjà existante : normal.
+    }
+    // v11 : Éveil & Jeux + Messagerie (IF NOT EXISTS → sans effet si déjà là).
+    await _createEveilCommunicationTables(db);
+  }
+
+  // ── Tables des modules existants ───────────────────────────────────────────
+  static Future<void> _createBaseTables(Database db) async {
     await db.execute('''
       CREATE TABLE users (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +132,7 @@ class DatabaseService {
         sexe           TEXT NOT NULL,
         groupe_sanguin TEXT,
         allergies      TEXT,
+        partage_journal INTEGER NOT NULL DEFAULT 0,
         created_at     TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE
       )
@@ -100,23 +187,199 @@ class DatabaseService {
         FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
       )
     ''');
-
-    // Tables ajoutées en v2
-    await _createTablesV2(db);
   }
 
-  // ── Mise à jour d'une base existante ──────────────────────────────────────
-  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await _createTablesV2(db);
-    }
+  // ── Tables Module 3 (dashboard / consultation) & Module 9 (nutrition) ───────
+  static Future<void> _createModuleTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS journal_symptomes (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id    INTEGER NOT NULL,
+        date         TEXT NOT NULL,
+        temperature  REAL,
+        toux         TEXT DEFAULT 'aucune',
+        comportement TEXT DEFAULT 'normal',
+        sommeil      TEXT DEFAULT 'bon',
+        appetit      TEXT DEFAULT 'normal',
+        symptomes    TEXT,
+        notes        TEXT,
+        created_at   TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS consultations (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id     INTEGER NOT NULL,
+        titre         TEXT NOT NULL,
+        resume        TEXT NOT NULL,
+        points_cles   TEXT,
+        suggestions   TEXT,
+        periode_debut TEXT,
+        periode_fin   TEXT,
+        nb_entrees    INTEGER DEFAULT 0,
+        generee_ia    INTEGER DEFAULT 0,
+        observation_id INTEGER,
+        created_at    TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Module 3 : données saisies par le pédiatre pendant la consultation.
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS observations_consultation (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id         INTEGER NOT NULL,
+        pediatre_id       TEXT,
+        pediatre_nom      TEXT,
+        date_consultation TEXT NOT NULL,
+        motif             TEXT NOT NULL,
+        poids             REAL,
+        taille            REAL,
+        temperature       REAL,
+        observations      TEXT,
+        diagnostic        TEXT,
+        traitement        TEXT,
+        recommandations   TEXT,
+        created_at        TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS traitements (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id   INTEGER NOT NULL,
+        nom         TEXT NOT NULL,
+        posologie   TEXT,
+        frequence   TEXT,
+        date_debut  TEXT NOT NULL,
+        date_fin    TEXT,
+        notes       TEXT,
+        medecin     TEXT,
+        heures      TEXT,
+        rappels     INTEGER NOT NULL DEFAULT 1,
+        created_at  TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS journal_alimentaire (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id       INTEGER NOT NULL,
+        date            TEXT NOT NULL,
+        repas           TEXT,
+        quantite        TEXT,
+        heure           TEXT,
+        notes           TEXT,
+        age_mois        INTEGER,
+        aliments        TEXT,
+        created_at      TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // ── Module 5 : historique des prises de médicaments ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS prises_medicament (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        traitement_id INTEGER NOT NULL,
+        enfant_id     INTEGER NOT NULL,
+        date_prevue   TEXT NOT NULL,
+        statut        TEXT NOT NULL,
+        date_action   TEXT NOT NULL,
+        UNIQUE (traitement_id, date_prevue),
+        FOREIGN KEY (traitement_id) REFERENCES traitements(id) ON DELETE CASCADE,
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // ── Module 9 : allergies alimentaires ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS allergies_alimentaires (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id  INTEGER NOT NULL,
+        allergene  TEXT NOT NULL,
+        severite   TEXT NOT NULL DEFAULT 'moderee',
+        reaction   TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // ── IA globale (Molka) : conversations avec l'assistant pédiatrique ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS conversations_ia (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id  INTEGER NOT NULL,
+        titre      TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS messages_ia (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversation_id INTEGER NOT NULL,
+        auteur          TEXT NOT NULL,
+        texte           TEXT NOT NULL,
+        urgent          INTEGER NOT NULL DEFAULT 0,
+        par_ia          INTEGER NOT NULL DEFAULT 0,
+        sources         TEXT,
+        created_at      TEXT NOT NULL,
+        FOREIGN KEY (conversation_id) REFERENCES conversations_ia(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // ── RAG : cache des vecteurs (embeddings) des passages ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS rag_embeddings (
+        passage_id TEXT PRIMARY KEY,
+        modele     TEXT,
+        empreinte  TEXT NOT NULL,
+        vecteur    TEXT NOT NULL
+      )
+    ''');
+
+    // ── Module 9 : consignes alimentaires rédigées par le pédiatre ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS conseils_nutrition (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id   INTEGER NOT NULL,
+        pediatre_id INTEGER,
+        auteur      TEXT,
+        texte       TEXT NOT NULL,
+        created_at  TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE,
+        FOREIGN KEY (pediatre_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    ''');
+
+    // ── Module 9 : suivi de l'allaitement ──
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS allaitements (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        enfant_id     INTEGER NOT NULL,
+        date          TEXT NOT NULL,
+        type          TEXT NOT NULL,
+        duree_minutes INTEGER,
+        quantite_ml   INTEGER,
+        notes         TEXT,
+        created_at    TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (enfant_id) REFERENCES enfants(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
-  // ── v2 : module Éveil & Jeux + Messagerie ─────────────────────────────────
-  static Future<void> _createTablesV2(Database db) async {
+  // ── v11 : Module Éveil & Jeux + Module Communication (Arij) ────────────────
+  static Future<void> _createEveilCommunicationTables(Database db) async {
     // Catalogue des activités éducatives
     await db.execute('''
-      CREATE TABLE activites (
+      CREATE TABLE IF NOT EXISTS activites (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
         titre         TEXT NOT NULL,
         categorie     TEXT NOT NULL,      -- memoire | langage | motricite | logique
@@ -124,17 +387,17 @@ class DatabaseService {
         age_max_mois  INTEGER NOT NULL,
         type_jeu      TEXT NOT NULL,      -- association | memory | activite
         description   TEXT,
-        en_famille    INTEGER DEFAULT 0   -- 1 = activité à faire en famille
+        en_famille    INTEGER DEFAULT 0
       )
     ''');
 
     // Séances de jeu réalisées par un enfant
     await db.execute('''
-      CREATE TABLE seances_jeu (
+      CREATE TABLE IF NOT EXISTS seances_jeu (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         enfant_id    INTEGER NOT NULL,
         activite_id  INTEGER NOT NULL,
-        score        INTEGER DEFAULT 0,   -- en %
+        score        INTEGER DEFAULT 0,
         duree_sec    INTEGER DEFAULT 0,
         created_at   TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (enfant_id)   REFERENCES enfants(id)   ON DELETE CASCADE,
@@ -144,7 +407,7 @@ class DatabaseService {
 
     // Activités favorites
     await db.execute('''
-      CREATE TABLE favoris (
+      CREATE TABLE IF NOT EXISTS favoris (
         enfant_id    INTEGER NOT NULL,
         activite_id  INTEGER NOT NULL,
         PRIMARY KEY (enfant_id, activite_id),
@@ -155,7 +418,7 @@ class DatabaseService {
 
     // Badges obtenus
     await db.execute('''
-      CREATE TABLE badges_enfant (
+      CREATE TABLE IF NOT EXISTS badges_enfant (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         enfant_id   INTEGER NOT NULL,
         code_badge  TEXT NOT NULL,
@@ -167,13 +430,13 @@ class DatabaseService {
 
     // Messagerie parent ↔ pédiatre
     await db.execute('''
-      CREATE TABLE messages (
+      CREATE TABLE IF NOT EXISTS messages (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         sender_id    INTEGER NOT NULL,
         receiver_id  INTEGER NOT NULL,
         enfant_id    INTEGER,
         content      TEXT NOT NULL,
-        type         TEXT DEFAULT 'texte', -- texte | bilan
+        type         TEXT DEFAULT 'texte',  -- texte | bilan
         lu           INTEGER DEFAULT 0,
         created_at   TEXT DEFAULT (datetime('now')),
         FOREIGN KEY (sender_id)   REFERENCES users(id) ON DELETE CASCADE,
@@ -181,10 +444,12 @@ class DatabaseService {
       )
     ''');
 
-    await _seedActivites(db);
+    // Catalogue initial : seulement si la table est vide
+    final n = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM activites'));
+    if ((n ?? 0) == 0) await _seedActivites(db);
   }
 
-  // ── Catalogue initial d'activités ─────────────────────────────────────────
   static Future<void> _seedActivites(Database db) async {
     final activites = [
       // Langage
@@ -202,7 +467,6 @@ class DatabaseService {
       {'titre': 'Pâte à modeler', 'categorie': 'motricite', 'age_min_mois': 24, 'age_max_mois': 72, 'type_jeu': 'activite', 'description': 'Faire des boules et des serpents pour muscler les doigts.', 'en_famille': 1},
       {'titre': 'Parcours de coussins', 'categorie': 'motricite', 'age_min_mois': 18, 'age_max_mois': 60, 'type_jeu': 'activite', 'description': 'Créez un petit parcours à enjamber dans le salon.', 'en_famille': 1},
     ];
-
     for (final a in activites) {
       await db.insert('activites', a);
     }

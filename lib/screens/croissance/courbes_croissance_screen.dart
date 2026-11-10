@@ -211,9 +211,9 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
                   ),
                 ),
                 lineBarsData: [
-                  _refLine(p3, Colors.red.withOpacity(0.45)),
-                  _refLine(p97, Colors.red.withOpacity(0.45)),
-                  _refLine(p50, Colors.white.withOpacity(0.2), dash: true),
+                  _refLine(p3, Colors.red.withValues(alpha: 0.45)),
+                  _refLine(p97, Colors.red.withValues(alpha: 0.45)),
+                  _refLine(p50, Colors.white.withValues(alpha: 0.2), dash: true),
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
@@ -221,12 +221,12 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
                     barWidth: 2.5,
                     dotData: FlDotData(
                       show: true,
-                      getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
+                      getDotPainter: (_, _, _, _) => FlDotCirclePainter(
                         radius: 4, color: color,
                         strokeColor: Colors.white, strokeWidth: 1.5,
                       ),
                     ),
-                    belowBarData: BarAreaData(show: true, color: color.withOpacity(0.07)),
+                    belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.07)),
                   ),
                 ],
               )),
@@ -282,11 +282,11 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
                 borderData: FlBorderData(show: false),
                 titlesData: _titlesData(),
                 extraLinesData: ExtraLinesData(horizontalLines: [
-                  HorizontalLine(y: 18.5, color: const Color(0xFF1E6FDB).withOpacity(0.6),
+                  HorizontalLine(y: 18.5, color: const Color(0xFF1E6FDB).withValues(alpha: 0.6),
                       strokeWidth: 1, dashArray: [4, 4]),
-                  HorizontalLine(y: 25.0, color: const Color(0xFFE67E22).withOpacity(0.6),
+                  HorizontalLine(y: 25.0, color: const Color(0xFFE67E22).withValues(alpha: 0.6),
                       strokeWidth: 1, dashArray: [4, 4]),
-                  HorizontalLine(y: 30.0, color: AppColors.danger.withOpacity(0.6),
+                  HorizontalLine(y: 30.0, color: AppColors.danger.withValues(alpha: 0.6),
                       strokeWidth: 1, dashArray: [4, 4]),
                 ]),
                 lineTouchData: LineTouchData(
@@ -305,16 +305,20 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
                     barWidth: 2.5,
                     dotData: FlDotData(
                       show: true,
-                      getDotPainter: (spot, _, __, ___) {
+                      getDotPainter: (spot, _, _, _) {
                         Color c = const Color(0xFF00C9A7);
-                        if (spot.y < 18.5) c = const Color(0xFF1E6FDB);
-                        else if (spot.y >= 30) c = AppColors.danger;
-                        else if (spot.y >= 25) c = const Color(0xFFE67E22);
+                        if (spot.y < 18.5) {
+                          c = const Color(0xFF1E6FDB);
+                        } else if (spot.y >= 30) {
+                          c = AppColors.danger;
+                        } else if (spot.y >= 25) {
+                          c = const Color(0xFFE67E22);
+                        }
                         return FlDotCirclePainter(radius: 5, color: c,
                             strokeColor: Colors.white, strokeWidth: 1.5);
                       },
                     ),
-                    belowBarData: BarAreaData(show: true, color: const Color(0xFF00C9A7).withOpacity(0.07)),
+                    belowBarData: BarAreaData(show: true, color: const Color(0xFF00C9A7).withValues(alpha: 0.07)),
                   ),
                 ],
               )),
@@ -328,24 +332,30 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
   // ── Helpers UI ──────────────────────────────────────────────────────────────
   Widget _buildPercentileBadge(double pct, String label, Color color, String unit, double val) {
     String interp;
-    if (pct < 3) interp = 'Très faible ⚠️';
-    else if (pct < 15) interp = 'Faible';
-    else if (pct < 85) interp = 'Normal ✓';
-    else if (pct < 97) interp = 'Élevé';
-    else interp = 'Très élevé ⚠️';
+    if (pct < 3) {
+      interp = 'Très faible ⚠️';
+    } else if (pct < 15) {
+      interp = 'Faible';
+    } else if (pct < 85) {
+      interp = 'Normal ✓';
+    } else if (pct < 97) {
+      interp = 'Élevé';
+    } else {
+      interp = 'Très élevé ⚠️';
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
           Container(
             width: 50, height: 50,
-            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
             child: Center(
               child: Text('P${pct.round()}',
                   style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13)),
@@ -381,15 +391,15 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
           Container(
             width: 50, height: 50,
-            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
             child: Center(child: Text(imc.toStringAsFixed(1),
                 style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13))),
           ),
@@ -413,7 +423,7 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
       children: [
         _legendeDot(color, 'Enfant'),
         _legendeDot(Colors.white38, 'P50 (médiane)'),
-        _legendeDot(Colors.red.withOpacity(0.6), 'P3 / P97'),
+        _legendeDot(Colors.red.withValues(alpha: 0.6), 'P3 / P97'),
       ],
     );
   }
@@ -479,7 +489,7 @@ class _CourbesCroissanceScreenState extends State<CourbesCroissanceScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text('P${pct.round()}',
