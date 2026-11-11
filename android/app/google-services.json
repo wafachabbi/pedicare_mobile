@@ -9,7 +9,26 @@
       "client_info": {
         "mobilesdk_app_id": "1:823589653983:android:76f16322e1dec13f55886a",
         "android_client_info": {
-          "package_name": "com.example.projet_mobile"
+          "package_name": "com.pedicare.ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqbLGB4b6YsMA5UT75Vxy2NY0bh5x51g0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823589653983:android:76f16322e1dec13f55886b",
+        "android_client_info": {
+          "package_name": "com.pedicare.ai.debug"
         }
       },
       "oauth_client": [],

@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "com.pedicare.ai"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -39,12 +39,12 @@ android {
         }
         getByName("release") {
             signingConfig     = signingConfigs.getByName("release")
-            isMinifyEnabled   = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled   = false
+            isShrinkResources = false
+            // proguardFiles(
+            //     getDefaultProguardFile("proguard-android-optimize.txt"),
+            //     "proguard-rules.pro"
+            // )
         }
     }
 
